@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
     "markdownify.apps.MarkdownifyConfig",
+    "django_celery_beat",
 ]
 
 MIDDLEWARE = [
@@ -162,7 +163,7 @@ CRISPY_TEMPLATE_PACK = "bootstrap"
 
 LOGIN_REDIRECT_URL = "/"
 
-from .logger import LOGGING # noqa
+from .logger import LOGGING  # noqa
 
 SITE_ID = 1
 
@@ -184,3 +185,34 @@ MARKDOWNIFY = {
         ],
     },
 }
+
+# Celery Configuration Options
+# https://docs.celeryq.dev/en/v5.2.6/userguide/configuration.html#configuration
+#
+# Django settings Specific:
+# The uppercase name-space means that all Celery configuration options must be specified in uppercase instead
+# of lowercase, and start with CELERY_, so for example the task_always_eager setting becomes CELERY_TASK_ALWAYS_EAGER,
+# and the broker_url setting becomes CELERY_BROKER_URL. This also applies to the workers settings, for instance,
+# the worker_concurrency setting becomes CELERY_WORKER_CONCURRENCY.
+
+CELERY_TASK_TRACK_STARTED = True
+
+if USE_TZ:
+    # http://docs.celeryproject.org/en/latest/userguide/configuration.html#std:setting-timezone
+    CELERY_TIMEZONE = TIME_ZONE
+# http://docs.celeryproject.org/en/latest/userguide/configuration.html#std:setting-broker_url
+CELERY_BROKER_URL = LOCAL_CELERY_BROKER_URL
+# http://docs.celeryproject.org/en/latest/userguide/configuration.html#std:setting-result_backend
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+# http://docs.celeryproject.org/en/latest/userguide/configuration.html#std:setting-accept_content
+CELERY_ACCEPT_CONTENT = ["application/json"]
+# http://docs.celeryproject.org/en/latest/userguide/configuration.html#std:setting-task_serializer
+CELERY_TASK_SERIALIZER = "json"
+# http://docs.celeryproject.org/en/latest/userguide/configuration.html#std:setting-result_serializer
+CELERY_RESULT_SERIALIZER = "json"
+# http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-time-limit
+CELERY_TASK_TIME_LIMIT = 5 * 60
+# http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-soft-time-limit
+CELERY_TASK_SOFT_TIME_LIMIT = 60
+# http://docs.celeryproject.org/en/latest/userguide/configuration.html#beat-scheduler
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
