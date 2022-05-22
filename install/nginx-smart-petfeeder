@@ -3,11 +3,11 @@ server {
 
     location = /favicon.ico { access_log off; log_not_found off; }
     location /static/ {
-        root /home/django/petnet_rescued;
+        root /home/django/smart_petfeeder;
     }
 
     location / {
         include proxy_params;
-        proxy_pass http://unix:/home/django/petnet_rescued/server.sock;
+        proxy_pass http://unix:/home/django/smart_petfeeder/server.sock;
     }
 }
