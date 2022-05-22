@@ -1,16 +1,22 @@
 from datetime import date, datetime
+from fractions import Fraction
+import logging
 
 import pytz
 import qrcode
 import qrcode.image.svg
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from rest_framework.authtoken.models import Token
+
+
+log = logging.getLogger(__name__)
 
 
 # Automatically generate auth token by catching user's post_save signal
@@ -176,13 +182,14 @@ class EventQueue(models.Model):
 class DeviceStatus(models.Model):
     device = models.ForeignKey(Device, models.CASCADE)
     last_boot = models.DateTimeField(auto_now_add=True)
-    last_ping = models.DateTimeField(auto_now=True)
+    last_ping = models.DateTimeField(auto_now_add=True)
     battery_voltage = models.FloatField(null=True, default=0.0)
     battery_soc = models.FloatField(null=True, default=0.0)
     battery_crate = models.FloatField(null=True, default=0.0)
     hopper_level = models.FloatField(null=True, default=0.0)
     has_event = models.BooleanField(default=False)
     on_power = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "app_device_status"
@@ -192,10 +199,14 @@ class MessageQueue(models.Model):
     class StatusCode(models.TextChoices):
         PENDING = "P", "Pending"
         COMPLETED = "C", "Completed"
+        ERROR = "E", "Error"
 
-    device_owner = models.ForeignKey(DeviceOwner, models.CASCADE)
+    device_owner = models.ForeignKey(DeviceOwner, models.CASCADE, null=True)
+    user = models.ForeignKey(User, models.CASCADE)
     status_code = models.CharField(max_length=1, choices=StatusCode.choices, default=StatusCode.PENDING)
-    message = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, null=True)
+    message = models.CharField(max_length=255, null=True)
+    priority = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -273,3 +284,20 @@ def add_event_queue3(sender, instance=None, created=False, **kwargs):
     status, is_created = DeviceStatus.objects.get_or_create(device_id=instance.device_id)
     status.has_event = True
     status.save()
+
+
+@receiver(post_save, sender=FeedingLog)
+def add_event_queue4(sender, instance=None, created=False, **kwargs):
+    try:
+        device = DeviceOwner.objects.get(id=instance.device_owner_id)
+        if instance.feed_type == "R":
+            message = "%s cup was manually remote dispensed." % (Fraction(instance.feed_amt))
+        elif instance.feed_type == "M":
+            message = "%s cup was manually dispensed." % (Fraction(instance.feed_amt))
+        else:
+            message = "%s cup was automatically dispensed for %s." % (Fraction(instance.feed_amt), instance.pet_name)
+        MessageQueue(
+            device_owner_id=instance.device_owner_id, user_id=device.user_id, title=device.name, message=message
+        ).save()
+    except ObjectDoesNotExist as e:
+        log.warning("Object not found: %r", e)
