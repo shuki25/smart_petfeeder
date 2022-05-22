@@ -101,9 +101,9 @@
                                         <option value="">Click on Refresh Devices List</option>
                                     {% endif %}
                                 </select>
-                                <button type="button" class="btn btn-primary ms-2" id="refresh_btn"><i class="fas fa-sync-alt" id="refresh_icon"></i> Refresh Devices List</button>
-                                <div id="smsHelp" class="form-text mb-3">Choose one of registered devices you want to receive notifications.</div>
+                                <button type="button" class="btn btn-primary btn-sm ms-2" id="refresh_btn"><i class="fas fa-sync-alt" id="refresh_icon"></i> Refresh Devices List</button>
                             </div>
+                            <div for="device_list" class="form-text mb-3">Choose one of registered devices you want to receive notifications.</div>
                             <span>Choose types of notification you would want to receive:</span>
                             <div class="form-check form-switch">
                                   <input class="form-check-input" type="checkbox" name="notification_options" value="auto_food" role="switch" id="auto_food" {% if notification_settings.auto_food %}checked{% endif %}>
