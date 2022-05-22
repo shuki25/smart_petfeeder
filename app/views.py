@@ -271,7 +271,7 @@ def add_edit_schedule(request, schedule_id=None):
             error = True
         try:
             feeding_time = "%s:00" % request.POST["time"]
-            schedule.local_time = "%s:00" % feeding_time
+            schedule.local_time = feeding_time
             current = datetime.datetime.now()
             local_datetime_str = "%04d-%02d-%02d %s" % (
                 current.year,
