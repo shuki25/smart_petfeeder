@@ -11,7 +11,9 @@ psutil~=5.9.1
 PyYAML~=6.0
 typing-extensions~=4.2.0
 celery~=5.2.6
-django_celery_beat~=2.2.1
+#django_celery_beat==2.2.1
+# Temporary fix until django_celery_beat bump up the version that supports django 4.
+git+https://github.com/celery/django-celery-beat.git@10123d3#egg=django_celery_beat
 redis~=4.3.1
 requests~=2.27.1
 pytz~=2022.1
