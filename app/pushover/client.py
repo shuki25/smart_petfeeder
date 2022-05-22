@@ -33,7 +33,7 @@ class Pushover:
         current_time = int(time.time())
 
         if self.last_sent != 0 and current_time < self.last_sent:
-            wait_time = 5 - (current_time - self.last_sent)
+            wait_time = 2 - (current_time - self.last_sent)
             print("Friendly API protocol: waiting %d seconds\n" % wait_time)
             time.sleep(wait_time)
 
@@ -56,7 +56,7 @@ class Pushover:
         current_time = int(time.time())
 
         if self.last_sent != 0 and current_time < self.last_sent:
-            wait_time = 5 - (current_time - self.last_sent)
+            wait_time = 2 - (current_time - self.last_sent)
             print("Friendly API protocol: waiting %d seconds\n" % wait_time)
             time.sleep(wait_time)
 
