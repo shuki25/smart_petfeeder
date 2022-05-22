@@ -1,0 +1,15 @@
+[Unit]
+Description=Smart PetFeeder Notification Worker
+After=gunicorn.service
+
+[Service]
+Type=idle
+User=django
+Group=django
+WorkingDirectory=/home/django/smart_petfeeder
+Environment="VIRTUAL_ENV=/home/django/smart_petfeeder/venv"
+Environment="PATH=$VIRTUAL_ENV/bin:$PATH"
+ExecStart=/home/django/smart_petfeeder/venv/bin/python worker.py
+
+[Install]
+WantedBy=multi-user.target

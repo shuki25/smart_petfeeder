@@ -1,0 +1,12 @@
+[Unit]
+Description=gunicorn daemon
+After=nginx.service
+
+[Service]
+User=django
+Group=www-data
+WorkingDirectory=/home/django/smart_petfeeder
+ExecStart=/home/django/smart_petfeeder/venv/bin/gunicorn --reload --access-logfile - --workers 3 --bind unix:/home/django/smart_petfeeder/server.sock smart_petfeeder.wsgi:application
+
+[Install]
+WantedBy=multi-user.target
