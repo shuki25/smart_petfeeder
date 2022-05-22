@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load account socialaccount %}
+{% block content %}
+
+    {% if form.errors %}
+        <div class="row">
+                <div class="col-md-6 mx-auto">
+                    <div class="alert alert-warning show" role="alert">
+                        <i class="fas fa-exclamation-triangle"></i> Your username and/or password didn't match. Please
+                        try again.
+                    </div>
+                </div>
+        </div>
+    {% endif %}
+
+        {% if user.is_authenticated %}
+            <div class="card mx-auto">
+                <h5 class="card-header">
+                    <i class="fas fa-exclamation-triangle text-warning"></i> Restricted Area
+                </h5>
+                <div class="card-body">
+                    <p>Your account doesn't have access to this page. To proceed,
+                        please login with an account that has access.</p>
+                </div>
+                <div class="card-footer">
+                    <p><a href="{% url 'password_reset' %}">Lost password?</a></p>
+                </div>
+            </div>
+        {% else %}
+            <div class="row">
+                <div class="col-md-6 mx-auto">
+                    <form id="sign-up" method="POST" action="{% url 'account_signup' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ next }}">
+                    </form>
+                    <form id="google-signin" method="post" action="/accounts/google/login/">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ next }}">
+                    </form>
+                    <div class="card">
+                        <h5 class="card-header text-warning">
+                            <i class="fas fa-sign-in-alt"></i><span class="p-2">Login or Sign Up</span>
+                        </h5>
+                        <div class="card-body">
+                            <form method="post" action="{% url 'account_login' %}">
+                                {% csrf_token %}
+                                <div class="input-group input-group-sm mb-3">
+                                    <span class="input-group-text"><i class="fas fa-user"></i> </span>
+                                    <input type="text" class="form-control" name="login" autofocus autocapitalize="none" autocomplete="username" maxlength="250" placeholder="Username" required>
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <span class="input-group-text"><i class="fas fa-key"></i> </span>
+                                    <input type="password" class="form-control" name="password" autocapitalize="none" autocomplete="password" placeholder="Password">
+                                </div>
+                                <div class="text-center">
+                                    <button class="btn btn-primary" type="submit"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+                                    <button id="signup-btn" type="button" class="btn btn-secondary"><i class="fas fa-user-plus"></i> Sign Up</button><br>
+                                    <button id="google-signin-btn" type="button" class="btn btn-secondary mt-2"><i class="fab fa-google"></i> Login via Google</button>
+                                </div>
+
+                                <input type="hidden" name="next" value="{{ next }}">
+                            </form>
+                        </div>
+                        <div class="card-footer">
+                            <a href="{% url 'account_reset_password' %}">Lost password?</a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        {% endif %}
+
+{% endblock %}
+{% block js %}
+    <script>
+        $(() => {
+            $('#signup-btn').click(function (e) {
+                $('#sign-up').submit()
+            })
+            $('#google-signin-btn').click(function (e) {
+                $('#google-signin').submit()
+            })
+        })
+    </script>
+{% endblock %}

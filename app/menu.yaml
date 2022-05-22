@@ -1,0 +1,35 @@
+- item: "Home"
+  route: home
+  authenticated: False
+- item: "Dashboard"
+  route: dashboard
+  authenticated: True
+- item: "Pets"
+  route: pets
+  routes:
+    - pets
+    - edit-pet
+    - add-pet
+  authenticated: True
+- item: "Feeders"
+  route: feeders
+  routes:
+    - feeders
+    - edit-feeder
+    - activate-feeder
+  authenticated: True
+- item: "Schedule"
+  route: schedule
+  routes:
+    - schedule
+    - edit-feed-time
+    - add-feed-time
+    - toggle-feed-time
+    - delete-feed-time
+  authenticated: True
+- item: "Settings"
+  route: settings
+  authenticated: True
+- item: "Help"
+  route: help
+  authenticated: False

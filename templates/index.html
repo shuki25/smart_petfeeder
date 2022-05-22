@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% load tz %}
+{% load static %}
+{% load fractions %}
+{% load markdownify %}
+{% block style %}
+    <style>
+        .feeder {
+            border-radius: 10px;
+            opacity: 70%;
+            box-shadow: 5px 5px 5px 0px #000000;
+        }
+        ul.log {
+            margin-top: 0;
+            list-style-position: inside;
+            padding-left: 0;
+        }
+        .carousel-caption-style {
+            {#border-radius: 10px;#}
+            {#box-shadow: 5px 5px 5px 0px #000000;#}
+            background: rgba(16, 16, 16, 0.6);
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+		<div class="col-md-12">
+            <div id="carouselExampleCaptions" class="carousel slide carousel-fade carousel-dark" data-bs-ride="carousel">
+                <div class="carousel-indicators">
+                    <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                    <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                </div>
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <img src="{% static 'smart-pet-feeder-control-board.png' %}" class="d-block w-100" alt="...">
+                        <div class="carousel-caption d-none d-md-block carousel-caption-style">
+                            <h5>Smart PetFeeder Control Board</h5>
+                            <p>A smart control board that controls your automatic pet feeder and communicates with the cloud where you can configure the feeding schedule and notifications. This board fits now defunct PetNet.io 2nd generation feeder.</p>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <img src="{% static 'petnet-2g-control-board.png' %}" class="d-block w-100" alt="...">
+                        <div class="carousel-caption d-none d-md-block carousel-caption-style">
+                            <h5>Inside the Petnet.io 2nd Generation Feeder</h5>
+                            <p>This is the base of the now defunct PetNet.io 2nd generation feeder with the Smart PetFeeder Revision C control board installed, wired up, programmed and ready to dispense food for your pet.</p>
+                        </div>
+                    </div>
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
+		</div>
+	</div>
+	<div class="row mt-3">
+		<div class="col-md-8">
+            {% for article in articles %}
+            {% if forloop.counter > 1 %}<hr class="hr">{% endif %}
+			<div class="jumbotron">
+                <div>
+                    <h2 class="d-inline">
+                    {% if article.display_title %}{{ article.display_title|safe }}{% else %}{{ article.title }}{% endif %}
+				    </h2> {% if article.is_pinned %}<i class="fas fa-thumbtack text-muted"></i>{% endif %}
+                </div>
+
+                <div class="d-inline mb-md-3 text-muted">
+                    <span>{{ article.author}}</span>
+                    <span style="float: right">{{ article.published_at|date:"d F Y" }}</span>
+                </div>
+                <div id="synopsis-{{ forloop.counter }}" class="mt-md-3 mb-md-3" style="display: block;">
+                    {{ article.content|markdownify|truncatewords_html:"100" }}
+                    <button class="btn btn-primary btn-sm" onclick="show_article({{ forloop.counter }})">Read More</button>
+                </div>
+                <div id="full-article-{{ forloop.counter }}" class="mt-md-3 mb-md-3" style="display: none;">
+                    {{ article.content|markdownify }}
+                    <button class="btn btn-primary btn-sm" onclick="hide_article({{ forloop.counter }})">Read Less</button>
+                </div>
+			</div>
+            {% endfor %}
+		</div>
+		<div class="col-md-4">
+            {% if not user.is_authenticated %}
+            <form id="sign-up" method="POST" action="{% url 'account_signup' %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ next }}">
+            </form>
+            <form id="google-signin" method="post" action="/accounts/google/login/">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ next }}">
+            </form>
+			<div class="card">
+                <h5 class="card-header text-warning">
+                    <i class="fas fa-sign-in-alt"></i><span class="p-2">Login or Sign Up</span>
+                </h5>
+                <div class="card-body">
+                    <form method="post" action="{% url 'account_login' %}">
+                        {% csrf_token %}
+                        <div class="input-group input-group-sm mb-3">
+                            <span class="input-group-text"><i class="fas fa-user"></i> </span>
+                            <input type="text" class="form-control" name="login" autofocus autocapitalize="none" autocomplete="username" maxlength="250" placeholder="Username" required>
+                        </div>
+                        <div class="input-group input-group-sm mb-3">
+                            <span class="input-group-text"><i class="fas fa-key"></i> </span>
+                            <input type="password" class="form-control" name="password" autocapitalize="none" autocomplete="password" placeholder="Password">
+                        </div>
+                        <div class="text-center btn-group-sm">
+                            <button class="btn btn-primary" type="submit"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+                            <button id="signup-btn" type="button" class="btn btn-secondary"><i class="fas fa-user-plus"></i> Sign Up</button><br>
+                            <button id="google-signin-btn" type="button" class="btn btn-secondary mt-2"><i class="fab fa-google"></i> Login via Google</button>
+                        </div>
+                        <input type="hidden" name="next" value="{{ next }}">
+                    </form>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'account_reset_password' %}">Lost password?</a>
+                </div>
+            </div>
+            {% endif %}
+		</div>
+	</div>
+{% endblock %}
+{% block js %}
+    <script>
+        $(() => {
+
+            $('#signup-btn').click(function (e) {
+                $('#sign-up').submit()
+            })
+            $('#google-signin-btn').click(function (e) {
+                $('#google-signin').submit()
+            })
+        })
+        function show_article(id) {
+            let synopsis = "#synopsis-" + id;
+            let article = "#full-article-" + id;
+            console.log("showing article: " + id + " " + synopsis);
+            $(synopsis).hide();
+            $(article).show();
+        }
+        function hide_article(id) {
+            let synopsis = "#synopsis-" + id;
+            let article = "#full-article-" + id;
+            console.log("hiding article: " + id + " " + synopsis);
+            $(article).hide();
+            $(synopsis).show();
+        }
+    </script>
+{% endblock %}

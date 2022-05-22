@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load tz %}
+{% load static %}
+{% load fractions %}
+{% load app_utils %}
+{% block style %}
+    <style>
+        td {
+            border: 1px solid white;
+            width: 28px;
+            text-align: center;
+            font-size: 0.7em;
+            font-weight: bold;
+            padding: 2px;
+            cursor: pointer;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <form id="feeding_time" method="post">
+        <input id="dow-0" type="hidden" name="dow" value="{%  if schedule.dow|bitwise_and:1 %}1{% else %}0{% endif %}">
+        <input id="dow-1" type="hidden" name="dow" value="{%  if schedule.dow|bitwise_and:2 %}2{% else %}0{% endif %}">
+        <input id="dow-2" type="hidden" name="dow" value="{%  if schedule.dow|bitwise_and:4 %}4{% else %}0{% endif %}">
+        <input id="dow-3" type="hidden" name="dow" value="{%  if schedule.dow|bitwise_and:8 %}8{% else %}0{% endif %}">
+        <input id="dow-4" type="hidden" name="dow" value="{%  if schedule.dow|bitwise_and:16 %}16{% else %}0{% endif %}">
+        <input id="dow-5" type="hidden" name="dow" value="{%  if schedule.dow|bitwise_and:32 %}32{% else %}0{% endif %}">
+        <input id="dow-6" type="hidden" name="dow" value="{%  if schedule.dow|bitwise_and:64 %}64{% else %}0{% endif %}">
+        <div class="card mb-2">
+            <div class="card-header align-items-center">
+                <div class="row">
+                    <div class="col-md-8 my-auto">
+                        <h4><i class="fas fa-cog me-2"></i> {{ title }}</h4>
+                    </div>
+                    <div class="col-md-4 my-auto">
+                        <span style="float: right">
+                            {% if current_route == "add-feed-time" %}
+                            <button class="btn btn-primary btn-sm" id="save_btn"><i id="save_icon" class="fas fa-plus"></i> Add to Schedule</button>
+                            {% else %}
+                            <button class="btn btn-primary btn-sm" id="save_btn"><i id="save_icon" class="fas fa-save"></i> Save</button>
+                            {% endif %}
+                            <button class="btn btn-secondary btn-sm" id="cancel_btn"><i class="fas fa-times"></i> Cancel</button>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h3>Setting up a Feeding Time</h3>
+                        <span class="text-muted">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quamquam te quidem video minime esse deterritum. Non quam nostram quidem, inquit Pomponius iocans; Erit enim mecum, si tecum erit. Traditur, inquit, ab Epicuro ratio neglegendi doloris. Duo Reges: constructio interrete. Quae diligentissime contra Aristonem dicuntur a Chryippo.
+                        </span>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="mt-2 w-100">
+                            {% csrf_token %}
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text" id="inputGroup-sizing-md" style="width: 110px">Feeder</span>
+                                <select id="device" class="form-select form-select-sm" name="device_owner_id">
+                                    <option value="">Select Feeder</option>
+                                    {% for row in device %}
+                                        <option value="{{ row.id }}" {% if schedule.device_owner.id == row.id %}selected{% endif %}>
+                                            {{ row.name }} - {{ row.feeder_model.brand_name }} {{ row.feeder_model.model_name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <label for="device" class="form-text mb-3">Select the feeder that will dispense food at a scheduled feeding time.</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text" id="inputGroup-sizing-md" style="width: 110px">Pet</span>
+                                <select id="pet" class="form-select form-select-sm" name="pet_id">
+                                    <option value="">Select Which Pet</option>
+                                    {% for row in pets %}
+                                        <option value="{{ row.id }}" {% if schedule.pet.id == row.id %}selected{% endif %}>
+                                            {{ row.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <label for="pet" class="form-text mb-3">Indicate which pet is receiving the food.</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text" id="inputGroup-sizing-md" style="width: 110px">Meal Name</span>
+                                <input id="meal_name" type="text" class="form-control" name="meal_name" value="{{ schedule.meal_name }}" required>
+                            </div>
+                            <label for="meal_name" class="form-text mb-3">Provide a name for this feeding time.</label>
+
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text" id="inputGroup-sizing-md" style="width: 110px">Portion Size</span>
+                                <select id="manual_feed" class="form-select form-select-sm" name="motor_timing_id">
+                                    <option value="">Select Portion Size</option>
+                                    {% for row in motor_timings %}
+                                        <option value="{{ row.id }}" {% if schedule.motor_timing.id == row.id %}selected{% endif %}>
+                                            {% display_fraction row.feed_amount %} cup
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <label for="manual_feed" class="form-text mb-3">Select the amount of pet food to dispense.</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text" id="inputGroup-sizing-sm" style="width: 110px">Feeding Time</span>
+                                <input id="meal_time" type="time" class="form-control" name="time" value="{{ schedule.utc_datetime|timezone:timezone|date:'H:i' }}" required>
+                                <span class="input-group-text" id="inputGroup-sizing-sm">{{ timezone }}</span>
+                            </div>
+                            <label for="feeder_name" class="form-text mb-3">Enter the time the feeder will dispense the pet food.</label>
+                            <div class="row">
+                                <div class="col-md-auto">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text" id="inputGroup-sizing-md" style="width: 110px">Days</span>
+                                        <span class="input-group-text w-auto bg-transparent">
+                                    <table class="dow" style="width:100%;">
+                                        <tr>
+                                            <td id="box-0" class="{% if schedule.dow|bitwise_and:1 %}bg-success{% endif %}" onclick="toggle('#box-0', '#dow-0', '1');">
+                                                <span class="{% if schedule.dow|bitwise_and:1 %}text-black-50{% else %}text-white-50{% endif %}">Su</span>
+                                            </td>
+                                            <td id="box-1" class="{% if schedule.dow|bitwise_and:2 %}bg-success{% endif %}" onclick="toggle('#box-1', '#dow-1', '2')">
+                                                <span class="{% if schedule.dow|bitwise_and:2 %}text-black-50{% else %}text-white-50{% endif %}">M</span>
+                                            </td>
+                                            <td id="box-2" class="{% if schedule.dow|bitwise_and:4 %}bg-success{% endif %}" onclick="toggle('#box-2', '#dow-2', '4')">
+                                                <span class="{% if schedule.dow|bitwise_and:4 %}text-black-50{% else %}text-white-50{% endif %}">T</span>
+                                            </td>
+                                            <td id="box-3" class="{% if schedule.dow|bitwise_and:8 %}bg-success{% endif %}" onclick="toggle('#box-3', '#dow-3', '8')">
+                                                <span class="{% if schedule.dow|bitwise_and:8 %}text-black-50{% else %}text-white-50{% endif %}">W</span>
+                                            </td>
+                                            <td id="box-4" class="{% if schedule.dow|bitwise_and:16 %}bg-success{% endif %}" onclick="toggle('#box-4', '#dow-4', '16')">
+                                                <span class="{% if schedule.dow|bitwise_and:16 %}text-black-50{% else %}text-white-50{% endif %}">Th</span>
+                                            </td>
+                                            <td id="box-5" class="{% if schedule.dow|bitwise_and:32 %}bg-success{% endif %}" onclick="toggle('#box-5', '#dow-5', '32')">
+                                                <span class="{% if schedule.dow|bitwise_and:32 %}text-black-50{% else %}text-white-50{% endif %}">F</span>
+                                            </td>
+                                            <td id="box-6" class="{% if schedule.dow|bitwise_and:64 %}bg-success{% endif %}" onclick="toggle('#box-6', '#dow-6', '64')">
+                                                <span class="{% if schedule.dow|bitwise_and:64 %}text-black-50{% else %}text-white-50{% endif %}">Sa</span>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </span>
+                                    </div>
+                                    <label for="feeder_name" class="form-text mb-3">Click on days of week the feeding
+                                        time will be active.</label>
+                                </div>
+                                <div class="col-md-auto">
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" name="active_flag" value="1" role="switch" id="active_flag" {% if schedule.active_flag %}checked{% endif %}>
+                                        <label class="form-check-label text-muted" for="active_flag">Feeding time is active</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+{% endblock %}
+{% block js %}
+    <script>
+        $(() => {
+            $('#save_btn').click(function (e) {
+                $('#save_icon').removeClass('fa-save');
+                $('#save_icon').addClass('fas fa-sync-alt').addClass('fa-spin');
+                $('#feeding_time').submit();
+            });
+            $('#cancel_btn').click(function (e) {
+                window.location.href = "{% url 'schedule' %}";
+                return false;
+            });
+        });
+        function toggle(cell, data, value) {
+            let current_value = parseInt($(data).val())
+            if ($(data).val() == value) {
+                $(cell).removeClass('bg-success');
+                $(cell).find('span').addClass('text-white-50').removeClass('text-black-50');
+                $(data).val(0);
+            } else {
+                $(cell).addClass('bg-success');
+                $(cell).find('span').removeClass('text-white-50').addClass('text-black-50');
+                $(data).val(value);
+            }
+        }
+    </script>
+{% endblock %}

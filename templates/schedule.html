@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load tz %}
+{% load static %}
+{% load fractions %}
+{% load app_utils %}
+{% block style %}
+    <style>
+        table.dow td {
+            border: 1px solid white;
+            width: 22px;
+            text-align: center;
+            font-size: 0.7em;
+            font-weight: bold;
+            padding: 2px;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="row mb-2">
+        <div class="col-md-6">
+            <h2>Feeding Schedule</h2>
+        </div>
+        <div class="col-md-6">
+            <span style="float: right">
+                    <a class="btn btn-primary btn-sm" href="{% url 'add-feed-time' %}"><i class="fas fa-plus"></i> Add a New Feeding Time</a>
+                </span>
+        </div>
+    </div>
+    {% if num_record == 0 %}
+        <div class="card mb-2">
+            <div class="card-header align-items-center-center">
+                <h5 class="text-warning"><i class="fas fa-exclamation-triangle"></i> No Feeding Times are Scheduled</h5>
+            </div>
+            <div class="card-body">
+                <p>You currently do not have any feeding times scheduled for your pet. Click on "Add a New Feeding Time"
+                    button above to add first scheduled feeding time for your pet.</p>
+            </div>
+        </div>
+    {% else %}
+        {% for schedule_title, feeding_times in schedule %}
+            {% if feeding_times|length %}
+                <div class="card mb-2">
+                    <div class="card-header align-items-center-center">
+                        <h5 class="text-warning"><i class="far fa-calendar-alt me-2"></i>{{ schedule_title }}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                <tr>
+                                    <th>Feeder</th>
+                                    <th>Pet</th>
+                                    <th>Meal Name</th>
+                                    <th>Feed Amt</th>
+                                    <th>Time</th>
+                                    <th>Days</th>
+                                    <th>Action</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for i in feeding_times %}
+                                    <tr>
+                                        <td>{{ i.device_owner.name }}</td>
+                                        <td>{{ i.pet.name }}</td>
+                                        <td>{{ i.meal_name }}</td>
+                                        <td>{% display_fraction i.motor_timing.feed_amount %} cup</td>
+                                        <td>{{ i.utc_datetime|timezone:timezone|date:'g:i A' }}</td>
+                                        <td>
+                                            <table class="dow" style="width:100%;">
+                                                <tr>
+                                                    <td class="{% if i.dow|bitwise_and:1 %}bg-success{% endif %}">
+                                                        <span class="{% if i.dow|bitwise_and:1 %}text-black-50{% else %}text-white-50{% endif %}">Su</span>
+                                                    </td>
+                                                    <td class="{% if i.dow|bitwise_and:2 %}bg-success{% endif %}">
+                                                        <span class="{% if i.dow|bitwise_and:2 %}text-black-50{% else %}text-white-50{% endif %}">M</span>
+                                                    </td>
+                                                    <td class="{% if i.dow|bitwise_and:4 %}bg-success{% endif %}">
+                                                        <span class="{% if i.dow|bitwise_and:4 %}text-black-50{% else %}text-white-50{% endif %}">T</span>
+                                                    </td>
+                                                    <td class="{% if i.dow|bitwise_and:8 %}bg-success{% endif %}">
+                                                        <span class="{% if i.dow|bitwise_and:8 %}text-black-50{% else %}text-white-50{% endif %}">W</span>
+                                                    </td>
+                                                    <td class="{% if i.dow|bitwise_and:16 %}bg-success{% endif %}">
+                                                        <span class="{% if i.dow|bitwise_and:16 %}text-black-50{% else %}text-white-50{% endif %}">Th</span>
+                                                    </td>
+                                                    <td class="{% if i.dow|bitwise_and:32 %}bg-success{% endif %}">
+                                                        <span class="{% if i.dow|bitwise_and:32 %}text-black-50{% else %}text-white-50{% endif %}">F</span>
+                                                    </td>
+                                                    <td class="{% if i.dow|bitwise_and:64 %}bg-success{% endif %}">
+                                                        <span class="{% if i.dow|bitwise_and:64 %}text-black-50{% else %}text-white-50{% endif %}">Sa</span>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        <td>
+                                            {% if i.active_flag %}
+                                                <a title="Pause Feeding" href="{% url 'toggle-feed-time' i.id %}"><i class="fas fa-pause ms-2"></i></a>
+                                            {% else %}
+                                                <a title="Reactivate Feeding" href="{% url 'toggle-feed-time' i.id %}"><i class="fas fa-play ms-2"></i></a>
+                                            {% endif %}
+                                            <a title="Edit" href="{% url 'edit-feed-time' i.id %}"><i class="fas fa-pencil-alt ms-2"></i></a>
+                                            <a class="delete_btn" data-bs-target="#delete_warning" data-bs-toggle="modal" data-id="{{ i.id }}" data-token="{{ i.id|xss_tokenize:'remove-feed-time' }}" title="Remove" href="#"><i class="fas fa-trash-alt ms-2"></i></a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+{% endblock %}
+{% block modal %}
+    Are you sure you want to permamently remove this feeding time from the schedule? <span class="text-decoration-underline fst-italic">This action is irreverisble and not recoverable.</span>
+{% endblock %}
+{% block js %}
+    <script>
+        $(() => {
+            $('.delete_btn').click(function (e) {
+                let id = $(this).data("id");
+                let token = $(this).data("token");
+                console.log("Clicked on delete button. Id: " + id + ", Token: " + token);
+                $('#record_id').val(id);
+                $('#record_token').val(token);
+                $('#remove_record').attr("action", "{% url 'remove-feed-time' %}");
+            });
+            $('#remove_confirm_btn').click(function (e) {
+                $(this).html('<i class="fas fa-spinner fa-spin"></i> Removing...');
+                $('#remove_record').submit()
+            });
+        })
+    </script>
+{% endblock %}

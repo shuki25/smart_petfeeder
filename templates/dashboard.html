@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load tz %}
+{% load static %}
+{% load fractions %}
+{% block style %}
+    <style>
+        .feeder {
+            border-radius: 10px;
+            opacity: 70%;
+            box-shadow: 5px 5px 5px 0px #000000;
+        }
+        ul.log {
+            margin-top: 0;
+            list-style-position: inside;
+            padding-left: 0;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    {% if num_feeders == 0 %}
+    <div class="card mb-2">
+        <div class="card-header align-items-center-center">
+            <h5 class="text-warning"><i class="fas fa-exclamation-triangle"></i> No Registered Feeders</h5>
+        </div>
+        <div class="card-body">
+            <h3>// Placeholder</h3>
+        </div>
+    </div>
+    {% else %}
+    {% for device in info %}
+    <div class="card mb-2">
+        <div class="card-header align-items-center">
+            <div class="row">
+                <div class="col-md-8">
+                    <h5><i class="fas fa-paw"></i> {{ device.device.name }}</h5>
+                </div>
+                {% if device.online == "Offline" %}
+                    <div class="col-md-4"><span class="text-danger" style="float: right"><i class="fas fa-circle p-2"></i>{{ device.online }}</span></div>
+                {% else %}
+
+                    <div class="col-md-4"><span class="text-success" style="float: right">{% if not device.device_status.on_power %}<span class="text-danger"><strong><i class="fas fa-battery-three-quarters"></i></strong></span>{% else %}<span class="text-warning"><strong><i class="fas fa-plug"></i></strong></span>
+                    {% endif %}<i class="fas fa-circle p-2"></i>{{ device.online }}</span></div>
+                {% endif %}
+
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="d-flex justify-content-center">
+                         <img class="feeder" src="{% static device.device.feeder_model.image_path %}" alt="{{ device.device.feeder_model.brand_name }} {{ device.device.feeder_model.model_name }}">
+                    </div>
+                    <div class="d-flex justify-content-center mt-3">
+                        <a class="btn btn-warning" id="feed_btn" href="{% url 'manual-feed' device.device.id %}"><i id="feed_icon" class="fas fa-drumstick-bite"></i> Feed {% display_fraction device.device.manual_motor_timing.feed_amount %} Cup</a>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <p class="mt-2">
+                    {% if not device.device_status.on_power %}<h3 class="text-danger"><i class="fas fa-exclamation-triangle"></i> Power is not connected, running on battery.</h3><br>
+                    {% endif %}
+                    <span class="text-warning">Device ID:</span> {{ device.device.device.control_board_identifier }}<br>
+                    {% timezone timezone %}
+                    <span class="text-warning">Last Ping:</span> {{ device.device_status.last_ping }}<br>
+                    {% endtimezone %}
+                    {% if device.online == "Offline" %}
+                        <span class="text-warning">Last Connected:</span> {{ device.uptime }}<br>
+                    {% else %}
+                        <span class="text-warning">Uptime:</span> {{ device.uptime }}<br>
+                    {% endif %}
+                    <span class="text-warning">Feeder Timezone:</span> {{ timezone }}</p>
+                    <div class="row">
+                        <div class="col-sm-5">
+                            {% if device.device_status.on_power and device.online == "Online" and device.device_status.battery_crate >= 0.10 %}
+                            <span class="text-danger"><i class="fas fa-bolt"></i></span>
+                        {% endif %}
+                        <span class="text-warning">Battery ({{ device.device_status.battery_voltage }}V):<br></span>
+                        </div>
+                        <div class="col-sm-7 text-white-50">
+                            {% if device.device_status.on_power and device.device_status.battery_crate >= 0.10 and device.online == "Online" and device.device_status.battery_soc < 99.6 %}
+                                <span style="float: right;">Charging Time to Full: {{ device.crate_time }}</span>
+                            {% elif device.device_status.battery_crate < 0 and device.online == "Online" and not device.device_status.on_power %}
+                                <span style="float: right">Time Remaining: {{ device.crate_time }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="progress mb-3">
+                        <div class="progress-bar {% if device.device_status.battery_soc >= 25 %}bg-warning{% else %}bg-danger{% endif %}" role="progressbar" style="width: {{ device.device_status.battery_soc }}%" aria-valuenow="device.device_status.battery_soc" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <span class="text-warning">Hopper Level:<br></span>
+                    <div class="progress mb-3">
+                        <div class="progress-bar {% if device.device_status.hopper_level >= 20 %}bg-warning{% else %}bg-danger{% endif %}" role="progressbar" style="width: {{ device.device_status.hopper_level }}%" aria-valuenow="{{ device.device_status.hopper_level }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    {% if device.next_meal.has_meal %}
+                    <p><span class="text-warning">Upcoming meal:<br></span>{{ device.next_meal.meal_name }} {{ device.next_meal.day }} at {{ device.next_meal.feed_time_tz }}, {{ device.next_meal.size }} cup for {{ device.next_meal.pet_name }}.</p>
+                    {% else %}
+                    <p><span class="text-warning">Upcoming meal:<br></span>No scheduled meal today or tomorrow.</p>
+                    {% endif %}
+                    <span class="text-warning">Recent feedings:</span>
+                    <ul class="log">
+                    {% timezone timezone %}
+                        {% for i in device.feedings %}
+                            {% if i.feed_type == "M" %}
+                                <li>{% display_fraction i.feed_amt %} cup was manually dispensed (button) on {{ i.feed_timestamp|date:"D, j F Y g:i A" }}</li>
+                            {% elif i.feed_type == "R" %}
+                                <li>{% display_fraction i.feed_amt %} cup was manually dispensed (remote) on {{ i.feed_timestamp|date:"D, j F Y g:i A" }}</li>
+                            {% else %}
+                                <li>{% display_fraction i.feed_amt %} cup was automatically dispensed for {{ i.pet_name }} on {{ i.feed_timestamp|date:"D, j F Y g:i A" }}</li>
+                            {% endif %}
+                        {% endfor %}
+                    {% endtimezone %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+{% endblock %}
+{% block js %}
+    <script>
+        $(() => {
+            $('#feed_btn').click(function (e) {
+                $('#feed_icon').removeClass('fa-drumstick-bite');
+                $('#feed_icon').addClass('fas fa-sync-alt').addClass('fa-spin');
+            });
+
+
+        })
+    </script>
+{% endblock %}

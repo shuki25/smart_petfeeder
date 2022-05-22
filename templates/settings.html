@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% load tz %}
+{% load static %}
+{% load fractions %}
+{% load app_utils %}
+{% block style %}
+    <style>
+        .pet {
+            border-radius: 10px;
+            opacity: 70%;
+            box-shadow: 5px 5px 5px 0px #000000;
+            width: 200px;
+
+        }
+        td {
+            border: 1px solid white;
+            width: 22px;
+            text-align: center;
+            font-size: 0.7em;
+            font-weight: bold;
+        }
+        .box {
+            border-radius: 10px;
+            border: 1px solid white;
+            opacity: 90%;
+            box-shadow: 3px 3px 3px 0px #000000;
+            width: 48%;
+            margin: 2px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <form id="general_settings" method="post">
+        <div class="card mb-2">
+            <div class="card-header align-items-center">
+                <div class="row">
+                    <div class="col-md-8 my-auto">
+                        <h4><i class="fas fa-cog me-2"></i> General Account Settings</h4>
+                    </div>
+                    <div class="col-md-4 my-auto">
+                        <span style="float: right">
+                            <button class="btn btn-primary btn-sm" id="save_btn"><i id="save_icon" class="fas fa-save"></i> Save</button>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h3>Time Zone</h3>
+                        <span class="text-muted">Please select the time zone you are in for the feeder to dispense food on schedule.</span>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="mt-2">
+                            {% csrf_token %}
+                            <div class="input-group input-group-sm">
+                                <label for="tz-selection" class="input-group-text" id="inputGroup-sizing-md" style="width: 150px">Time zone</label>
+                                <select id="tz-selection" class="form-select form-select-sm" name="posix_timezone_id" aria-describedby="tzHelp">
+                                    <option>Please select the timezone you are in</option>
+                                    {% for row in timezones %}
+                                        <option value="{{ row.id }}" {% if settings.timezone == row.timezone %}selected{% endif %}>{{ row.timezone }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div id="tzHelp" class="form-text">Please indicate which time zone you are currently in.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-md-4">
+                    <div class="col-md-4">
+                        <h3>Notification</h3>
+                        <span class="text-muted">
+                            <p>Notification allows you to configure how you receive alerts and what type of notifications you want to receive. Smart Pet Feeder uses <a href="https://support.pushover.net/i7-what-is-pushover-and-how-do-i-use-it">Pushover Notifications</a> app to push notifications to your devices. You will need to <a href="https://pushover.net/login">register for an account</a> if you don't have Pushover app on your device.</p>
+                        <p>You can choose which items you would like to be notified when the feeder sends alerts or when the food has been dispensed.</p>
+                        </span>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="mt-2">
+                            <span>Pushover Notifications</span>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text" id="inputGroup-sizing-md" style="width: 150px">User Key</span>
+                                <input id="user_key" type="text" class="form-control" name="user_key" value="{{ notification_settings.pushover_user_key }}" size="30" maxlength="30">
+                                <div class="input-group-append">
+                                    <button id="clear_button" class="btn btn-secondary btn-sm" type="button"><i class="far fa-times-circle"></i> </button>
+                                </div>
+                                {% if notification_settings.pushover_user_key != "" %}
+                                <button type="button" class="btn btn-success ms-2" id="verify_btn" disabled><i id="verify_icon" class="fas fa-check"></i> Verified</button>
+                                {% else %}
+                                <button type="button" class="btn btn-primary ms-2" id="verify_btn" disabled><i id="verify_icon" class="fas fa-user-check"></i> Verify User Key</button>
+                                {% endif %}
+                            </div>
+                            <div id="smsHelp" class="form-text mb-3">Your Pushover User Key shown in your Pushover account settings.</div>
+                            <div id="registered_devices" class="input-group input-group-sm" {% if notification_settings.pushover_user_key == "" %}style="display: none;"{% endif %}>
+                                <span class="input-group-text" id="inputGroup-sizing-md" style="width: 150px">Registered Devices</span>
+                                <select id="device_list" class="form-select form-select-sm" name="device_list">
+                                    {% if notification_settings.pushover_devices != "" %}
+                                        <option value="">Not Selected</option>
+                                        <option value="{{ notification_settings.pushover_devices }}" selected>{{ notification_settings.pushover_devices }}</option>
+                                    {% else %}
+                                        <option value="">Click on Refresh Devices List</option>
+                                    {% endif %}
+                                </select>
+                                <button type="button" class="btn btn-primary ms-2" id="refresh_btn"><i class="fas fa-sync-alt" id="refresh_icon"></i> Refresh Devices List</button>
+                                <div id="smsHelp" class="form-text mb-3">Choose one of registered devices you want to receive notifications.</div>
+                            </div>
+                            <span>Choose types of notification you would want to receive:</span>
+                            <div class="form-check form-switch">
+                                  <input class="form-check-input" type="checkbox" name="notification_options" value="auto_food" role="switch" id="auto_food" {% if notification_settings.auto_food %}checked{% endif %}>
+                                  <label class="form-check-label text-muted" for="auto_food">Food automatically dispensed</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                  <input class="form-check-input" type="checkbox" name="notification_options" value="manual_food" role="switch" id="manual_food" {% if notification_settings.manual_food %}checked{% endif %}>
+                                  <label class="form-check-label text-muted" for="manual_food">Food manually dispensed</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                  <input class="form-check-input" type="checkbox" name="notification_options" value="feeder_offline" role="switch" id="feeder_offline" {% if notification_settings.feeder_offline %}checked{% endif %}>
+                                  <label class="form-check-label text-muted" for="feeder_offline">Feeder went offline</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                  <input class="form-check-input" type="checkbox" name="notification_options" value="low_hopper" role="switch" id="low_hopper" {% if notification_settings.low_hopper %}checked{% endif %}>
+                                  <label class="form-check-label text-muted" for="low_hopper">Low food hopper status</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                  <input class="form-check-input" type="checkbox" name="notification_options" value="power_disconnected" role="switch" id="power_disconnected" {% if notification_settings.power_disconnected %}checked{% endif %}>
+                                  <label class="form-check-label text-muted" for="power_disconnected">Feeder power got disconnected</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                  <input class="form-check-input" type="checkbox" name="notification_options" value="low_battery" role="switch" id="low_battery" {% if notification_settings.low_battery %}checked{% endif %}>
+                                  <label class="form-check-label text-muted" for="low_battery">Low battery alert (less than 30 minutes)</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+{% endblock %}
+{% block js %}
+    <script>
+        {% if notification_settings.pushover_user_key != "" %}
+            let verify_complete = true;
+            let verify_btn_update = true;
+        {% else %}
+            let verify_complete = false;
+            let verify_btn_update = false;
+        {% endif %}
+
+        $(() => {
+            $('#save_btn').click(function (e) {
+                $('#save_icon').removeClass('fa-save');
+                $('#save_icon').addClass('fas fa-sync-alt').addClass('fa-spin');
+                $('#general_settings').submit();
+            });
+            $('#cancel_btn').click(function (e) {
+                window.location.href = "{% url 'pets' %}";
+                return false;
+            });
+            $('#clear_button').click(function (e) {
+                $('#user_key').val("").focus().keyup();
+
+            });
+            $('#user_key').on("keyup", function (e) {
+                if(verify_btn_update && verify_complete) {
+                    $('#verify_btn').html('<i id="verify_icon" class="fas fa-user-check"></i> Verify User Key');
+                    $('#verify_btn').removeClass('btn-success').addClass('btn-primary');
+                    $('#device_list').html('<option>Not Selected</option>');
+                    $('#registered_devices').hide()
+                    verify_btn_update = false;
+                    verify_complete = false;
+                }
+
+                if($('#user_key').val().length >= 30) {
+                    $('#verify_btn').prop("disabled", false);
+                } else {
+                    $('#verify_btn').prop("disabled", true);
+                }
+            });
+            $('#verify_btn').click(function (e) {
+                let user_key = $('#user_key').val();
+                if(user_key != "" && user_key.length >= 30) {
+                    $('#verify_icon').removeClass('fa-user-check').addClass('fa-sync-alt').addClass('fa-spin');
+                    let url = "/pushover/verify/" + $('#user_key').val() + "/";
+                    $.get(url, function (data, status) {
+                        if(data.status == 0) {
+                            toastr.error('Invalid user key. Please re-enter the user key.');
+                            $('#user_key').val("");
+                            $('#verify_btn').prop("disabled", true);
+                            $('#verify_icon').removeClass('fa-sync-alt').removeClass('fa-spin').addClass('fa-user-check');
+                            $('#device_list').html('<option>Not Selected</option>');
+                        } else {
+                            $('#verify_btn').removeClass('btn-primary').addClass('btn-success');
+                            $('#verify_btn').html('<i class="fas fa-check"></i> Verified');
+                            $('#verify_btn').prop("disabled", true);
+                            $('#device_list').html('<option>Not Selected</option>');
+                            $.each(data.devices, function(index, value) {
+                                $('#device_list').append($("<option></option>").attr("value",value).text(value));
+                                $('#registered_devices').show()
+                            });
+                            verify_complete = true;
+                            verify_btn_update = true;
+                        }
+                    });
+                }
+            });
+            $('#refresh_btn').click(function (e) {
+                let user_key = $('#user_key').val();
+                if(user_key != "" && user_key.length >= 30) {
+                    $('#refresh_icon').addClass('fa-spin');
+                    let url = "/pushover/verify/" + $('#user_key').val() + "/";
+                    $.get(url, function (data, status) {
+                        if(data.status == 0) {
+                            toastr.warning('Invalid user key. Please re-enter the user key.');
+                            $('#user_key').val("");
+                            $('#verify_btn').prop("disabled", true);
+                            $('#verify_icon').removeClass('fa-sync-alt').removeClass('fa-spin').addClass('fa-user-check');
+                        } else {
+                            $('#device_list').html('<option>Not Selected</option>');
+                            $.each(data.devices, function(index, value) {
+                                $('#device_list').append($("<option></option>").attr("value",value).text(value));
+                            });
+                            $('#refresh_icon').removeClass('fa-spin');
+                        }
+                    });
+                }
+            });
+        })
+    </script>
+{% endblock %}

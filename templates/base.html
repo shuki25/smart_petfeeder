@@ -1,0 +1,168 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="h-100">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }}</title>
+    {% block css %}
+        {#        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">#}
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-dark-5@1.1.3/dist/css/bootstrap-dark.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.6.0/font/bootstrap-icons.css" integrity="sha384-7ynz3n3tAGNUYFZD3cWe5PDcE36xj85vyFkawcF6tIwxvIecqKvfwLiaFdizhPpN" crossorigin="anonymous">
+        <!-- Toastr notification -->
+         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
+    {% endblock %}
+
+    {% block style %}
+    {% endblock %}
+
+</head>
+<body class="d-flex flex-column h-100" style="padding-top: 80px;">
+
+<header>
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Smart <span class="text-warning">PetFeeder</span></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="navbar-nav me-auto mb-2 mb-md-0">
+                {% for menu in menu_list %}
+                    {% if user.is_authenticated and menu.authenticated or not menu.authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if current_route == menu.route or current_route in menu.routes %} fw-bold text-warning active{% endif %}" href="{% url menu.route %}">{{ menu.item }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                </ul>
+                {% if user.is_authenticated %}
+                    {#                    <span class="navbar-text">{{ user.username }}</span>#}
+                    <span class="nav-item dropdown">
+                        <a class="nav-link" data-bs-toggle="dropdown" href="#">
+                            <i class="far fa-bell"></i>
+                            <span class="badge bg-danger">15</span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                            <span class="dropdown-header">15 Notifications</span>
+                            <div class="dropdown-divider"></div>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-envelope mr-2"></i> 4 new messages
+                                <span class="float-right text-muted text-sm">3 mins</span>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-users mr-2"></i> 8 friend requests
+                                <span class="float-right text-muted text-sm">12 hours</span>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-file mr-2"></i> 3 new reports
+                                <span class="float-right text-muted text-sm">2 days</span>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="#" class="dropdown-item dropdown-footer">See All Notifications</a>
+                        </div>
+                    </span>
+                    <span class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            {{ user.username }}
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown" style="margin-right:100px;">
+                            <li><a class="dropdown-item" href="#">My Account</a></li>
+                            <li><a class="dropdown-item" href="{% url 'account_change_password' %}">Change Password</a></li>
+                        </ul>
+                    </span>
+                    <form method="post" action="{% url 'account_logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn nav-link"><i class="fas fa-sign-out-alt"></i></button>
+                    </form>
+{#                    <a class="nav-link" href="{% url 'account_logout' %}?next=/"><i class="fas fa-sign-out-alt"></i></a>#}
+
+                {% else %}
+                    <a class="nav-link" href="{% url 'account_login' %}?next=/"><i class="fas fa-sign-in-alt"></i></a>
+                {% endif %}
+            </div>
+
+        </div>
+    </nav>
+</header>
+
+<!-- Begin page content -->
+<main class="flex-shrink-0">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                {% block content %}
+                    <div class="card">
+                        <h5 class="card-header ">
+                            <i class="fas fa-exclamation-triangle"></i> Content Placeholder for {{ title }}
+                        </h5>
+                        <div class="card-body">
+                            <h1>// To Do</h1>
+                            <p class="card-text">
+                                Placeholder for future addition
+                            </p>
+                        </div>
+                        <div class="card-footer">
+                            Footer
+                        </div>
+                    </div>
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</main>
+<!-- Modal -->
+<div class="modal fade" id="delete_warning" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title text-warning" id="staticBackdropLabel"><i class="fas fa-exclamation-triangle me-2"></i> Warning: Permanent Removal</h3>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% block modal %}
+                {% endblock %}
+            </div>
+            <div class="modal-footer">
+                <form id="remove_record" method="post" action="">
+                    {% csrf_token %}
+                    <input id="record_id" type="hidden" name="id" value="">
+                    <input id="record_token" type="hidden" name="token" value="">
+                </form>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal"><i class="fas fa-times-circle me-2"></i>No</button>
+                <button id="remove_confirm_btn" type="button" class="btn btn-primary"><i class="fas fa-check me-2"></i>Yes, I am Sure</button>
+            </div>
+        </div>
+    </div>
+</div>
+<footer class="footer mt-auto py-3 bg-dark">
+    <div class="container">
+        <span class="text-muted"><small>Copyright &copy; 2022 - Dr. Joshua Butler </small></span>
+    </div>
+</footer>
+{% block javascript %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+    <!-- jQuery 3 -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <!-- jQuery UI -->
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+    <!-- Toastr notification -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+    <script>
+    {% if messages %}
+        $(() => {
+            {% for message in messages %}
+                toastr.{{ message.tags }}('{{ message }}');
+            {% endfor %}
+        });
+    {% endif %}
+    </script>
+{% endblock %}
+{% block js %}
+{% endblock %}
+</body>
+</html>

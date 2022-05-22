@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load tz %}
+{% load static %}
+{% load fractions %}
+{% load app_utils %}
+{% block style %}
+    <style>
+        .pet {
+            border-radius: 10px;
+            opacity: 70%;
+            box-shadow: 5px 5px 5px 0px #000000;
+            width: 200px;
+
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="row mb-2">
+        <div class="col-md-6">
+            <h2>Pets</h2>
+        </div>
+    </div>
+    <div class="card mb-2">
+        <div class="card-header align-items-center">
+            <div class="row">
+                <div class="col-md-8 my-auto">
+                    <h4><i class="fas fa-paw" style="padding-right: 2px;"></i> {{ title }}</h4>
+                </div>
+                <div class="col-md-4 my-auto">
+                    <span style="float: right">
+                        {% if current_route == 'add-pet' %}
+                        <button class="btn btn-primary btn-sm" id="save_btn"><i id="save_icon" class="fas fa-plus"></i> Add New Pet</button>
+                        {% else %}
+                        <button class="btn btn-primary btn-sm" id="save_btn"><i id="save_icon" class="fas fa-save"></i> Save</button>
+                        {% endif %}
+                        <button class="btn btn-secondary btn-sm" id="cancel_btn"><i class="fas fa-times"></i> Cancel</button>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="d-flex justify-content-center">
+                         <img class="pet" src="{% static "cat-placeholder.png" %}" alt="petnet feeder">
+                    </div>
+                    <div class="d-flex justify-content-center mt-3">
+                        <button class="btn btn-warning" id="upload_btn"><i id="feed_icon" class="fas fa-file-upload"></i> Upload Photo</button>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="mt-2">
+                        <form id="about_pet" method="post">
+                            {% csrf_token %}
+                            <h3 class="text-primary">About Your Pet</h3>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text" id="inputGroup-sizing-md" style="width: 100px">Name</span>
+                                <input type="text" class="form-control" name="name" value="{{ pet.name }}" required>
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text" id="inputGroup-sizing-md" style="width: 100px">Type</span>
+                                <select class="form-select form-select-sm" name="animal_type_id" required>
+                                    <option value="">Select the type of your animal</option>
+                                    {% for row in animal_type %}
+                                        <option value="{{ row.id }}" {% if pet.animal_type.id == row.id %}selected{% endif %}>{{ row.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text" id="inputGroup-sizing-md" style="width: 100px">Size</span>
+                                <select class="form-select form-select-sm" name="animal_size_id">
+                                    <option value="">Select the size of your animal</option>
+                                    {% for row in animal_size %}
+                                        <option value="{{ row.id }}" {% if pet.animal_size.id == row.id %}selected{% endif %}>{{ row.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text" id="inputGroup-sizing-md" style="width: 100px">Weight</span>
+                                <input type="number" min="0" step="0.1" class="form-control" name="weight" value="{{ pet.weight }}" required>
+                                <span class="input-group-text" id="inputGroup-sizing-md" style="width: 50px">lbs</span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <script>
+        $(() => {
+            $('#save_btn').click(function (e) {
+                $('#save_icon').removeClass('fa-save');
+                $('#save_icon').addClass('fas fa-sync-alt').addClass('fa-spin');
+                $('#about_pet').submit()
+            });
+            $('#cancel_btn').click(function (e) {
+                window.location.href = "{% url 'pets' %}";
+                return false;
+            });
+
+        })
+    </script>
+{% endblock %}
