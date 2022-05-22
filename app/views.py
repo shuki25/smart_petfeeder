@@ -24,13 +24,15 @@ from .models import (
     FeederModel,
     FeedingLog,
     FeedingSchedule,
+    MessageQueue,
     MotorTiming,
     NotificationSettings,
     Pet,
     PosixTimezone,
     Settings,
 )
-from .pushover import client
+from .pushover.client import Pushover
+from app.tasks import send_pushover_notification
 from .utils import (
     generate_device_key,
     get_next_feeding,
@@ -157,7 +159,7 @@ def manual_feed(request, device_owner_id):
     else:
         messages.error("Internal error. Manual feed cancelled")
 
-    return HttpResponseRedirect("/")
+    return HttpResponseRedirect("/dashboard/")
 
 
 @login_required
@@ -696,9 +698,36 @@ def settings(request):
             notification_settings.power_disconnected = False
             notification_settings.low_battery = False
 
+        if notification_settings.pushover_user_key == "" and request.POST["user_key"] != "":
+            MessageQueue(
+                user_id=request.user.id,
+                title="Pushover Notification Enabled",
+                message="You are receiving this notification because you provided the user key to the notification settings. The Pushover Notification is now enabled.",
+            ).save()
+        elif notification_settings.pushover_user_key != "" and request.POST["user_key"] == "":
+            MessageQueue(
+                user_id=request.user.id,
+                title="Pushover Notification Disabled",
+                message="You are receiving this notification because you removed the user key to the notification settings. The Pushover Notification is now disabled.",
+            ).save()
+            send_pushover_notification.apply_async(args=[request.user.id])
+            sleep(2)
+        elif (
+            notification_settings.pushover_user_key != request.POST["user_key"]
+            and notification_settings.pushover_user_key != ""
+            and request.POST["user_key"] != ""
+        ):
+            MessageQueue(
+                user_id=request.user.id,
+                title="Pushover Notification Settings Update",
+                message="You are receiving this notification because you changed the user key to the notification settings. The record has been updated to use the new user key.",
+            ).save()
+
         notification_settings.pushover_user_key = request.POST["user_key"]
         notification_settings.pushover_devices = request.POST["device_list"]
         notification_settings.save()
+
+        send_pushover_notification.apply_async(args=[request.user.id])
 
     s = Settings.objects.filter(user_id=request.user.id).values()
     user_settings = {row["name"]: row["value"] for row in s}
@@ -720,7 +749,7 @@ def pushover_verify(request, user_key):
     if user_key is None:
         raise ValueError("user_key is required.")
 
-    c = client.Pushover()
+    c = Pushover()
     r = c.validate_user(user_key)
 
     return HttpResponse(r.text, content_type="application/json")
