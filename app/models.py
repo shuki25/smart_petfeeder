@@ -290,14 +290,19 @@ def add_event_queue3(sender, instance=None, created=False, **kwargs):
 def add_event_queue4(sender, instance=None, created=False, **kwargs):
     try:
         device = DeviceOwner.objects.get(id=instance.device_owner_id)
-        if instance.feed_type == "R":
-            message = "%s cup was manually remote dispensed." % (Fraction(instance.feed_amt))
-        elif instance.feed_type == "M":
-            message = "%s cup was manually dispensed." % (Fraction(instance.feed_amt))
-        else:
-            message = "%s cup was automatically dispensed for %s." % (Fraction(instance.feed_amt), instance.pet_name)
-        MessageQueue(
-            device_owner_id=instance.device_owner_id, user_id=device.user_id, title=device.name, message=message
-        ).save()
+        user_settings = NotificationSettings.objects.filter(user_id=device.user_id).first()
+        if user_settings.pushover_user_key != "":
+            if instance.feed_type == "R":
+                message = "%s cup was manually remote dispensed." % (Fraction(instance.feed_amt))
+            elif instance.feed_type == "M":
+                message = "%s cup was manually dispensed." % (Fraction(instance.feed_amt))
+            else:
+                message = "%s cup was automatically dispensed for %s." % (
+                    Fraction(instance.feed_amt),
+                    instance.pet_name,
+                )
+            MessageQueue(
+                device_owner_id=instance.device_owner_id, user_id=device.user_id, title=device.name, message=message
+            ).save()
     except ObjectDoesNotExist as e:
         log.warning("Object not found: %r", e)
