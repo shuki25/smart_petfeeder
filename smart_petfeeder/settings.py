@@ -117,7 +117,7 @@ AUTHENTICATION_BACKENDS = [
 
 ACCOUNT_ALLOW_REGISTRATION = True
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
-ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_REQUIRED = False
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
