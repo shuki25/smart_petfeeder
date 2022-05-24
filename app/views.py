@@ -668,17 +668,35 @@ def settings(request):
         settings_list = ["timezone, tz_esp32"]
         try:
             ptz = PosixTimezone.objects.get(id=request.POST["posix_timezone_id"])
-            update_setting("timezone", ptz.timezone, request.user.id)
-            update_setting("tz_esp32", ptz.posix_tz, request.user.id)
-            devices = DeviceOwner.objects.filter(user_id=request.user.id)
-            # for device in devices:
-            #     event_queue = EventQueue(device_owner_id=device.id, event_code=400, status_code="P")
-            #     event_queue.save()
-            #     update_has_event_tasks(device.device_id)
-            if len(devices):
-                messages.success(request, "Settings Saved. Changes are being synced with feeders.")
-            else:
-                messages.success(request, "Settings Saved.")
+            old_settings = Settings.objects.filter(user_id=request.user.id, name="timezone").first()
+            if old_settings.value != ptz.timezone:
+                log.info("Timezone changed, updating feeding times to %s timezone", ptz.timezone)
+                update_setting("timezone", ptz.timezone, request.user.id)
+                update_setting("tz_esp32", ptz.posix_tz, request.user.id)
+                devices = DeviceOwner.objects.filter(user_id=request.user.id)
+
+                scheduled_feedings = FeedingSchedule.objects.filter(device_owner__user_id=request.user.id)
+                for schedule in scheduled_feedings:
+                    log.info("processing feeding schedule id: %d", schedule.id)
+                    feeding_time = schedule.local_time
+                    current = datetime.datetime.now()
+                    local_datetime_str = "%04d-%02d-%02d %s" % (
+                        current.year,
+                        current.month,
+                        current.day,
+                        feeding_time,
+                    )
+                    local_tz = pytz.timezone(ptz.timezone)
+                    naive_datetime = datetime.datetime.strptime(local_datetime_str, "%Y-%m-%d %H:%M:%S")
+                    local_datetime = local_tz.localize(naive_datetime)
+                    utc_datetime = local_datetime.astimezone(pytz.utc)
+                    schedule.time = utc_datetime.strftime("%H:%M:%S")
+                    schedule.save()
+
+                if len(devices):
+                    messages.success(request, "Settings Saved. Changes are being synced with feeders.")
+                else:
+                    messages.success(request, "Settings Saved.")
         except ObjectDoesNotExist:
             messages.error(request, "Object not found. Settings not saved.")
 
