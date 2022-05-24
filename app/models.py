@@ -9,7 +9,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
@@ -262,10 +262,25 @@ class Carousel(models.Model):
 
 # Automatically add event to event queue by triggering post_save signal
 @receiver(post_save, sender=FeedingSchedule)
-def add_event_queue1(sender, instance=None, created=False, **kwargs):
+def add_event_queue_feeding_schedule_save(sender, instance=None, created=False, **kwargs):
     # eq = EventQueue.objects.filter(device_owner_id=instance.device_owner_id, event_code=300, status_code="P")
     # if not len(eq):
-    EventQueue.objects.get_or_create(device_owner_id=instance.device_owner_id, event_code=300)
+    log.info("in add_event_queue_feeding_schedule_save")
+    EventQueue.objects.get_or_create(device_owner_id=instance.device_owner_id, event_code=300, status_code="P")
+    status, is_created = DeviceStatus.objects.get_or_create(device_id=instance.device_id)
+    status.has_event = True
+    status.save()
+
+
+@receiver(post_delete, sender=FeedingSchedule)
+def add_event_queue_feeding_schedule_delete(sender, instance=None, created=False, **kwargs):
+    # eq = EventQueue.objects.filter(device_owner_id=instance.device_owner_id, event_code=300, status_code="P")
+    # if not len(eq):
+    log.info("in add_event_queue_feeding_schedule_delete")
+    EventQueue.objects.get_or_create(device_owner_id=instance.device_owner_id, event_code=300, status_code="P")
+    status, is_created = DeviceStatus.objects.get_or_create(device_id=instance.device_id)
+    status.has_event = True
+    status.save()
 
 
 @receiver(post_save, sender=Settings)
@@ -292,11 +307,11 @@ def add_event_queue4(sender, instance=None, created=False, **kwargs):
         device = DeviceOwner.objects.get(id=instance.device_owner_id)
         user_settings = NotificationSettings.objects.filter(user_id=device.user_id).first()
         if user_settings.pushover_user_key != "":
-            if instance.feed_type == "R":
+            if instance.feed_type == "R" and user_settings.manual_food:
                 message = "%s cup was manually remote dispensed." % (Fraction(instance.feed_amt))
-            elif instance.feed_type == "M":
+            elif instance.feed_type == "M" and user_settings.manual_food:
                 message = "%s cup was manually dispensed." % (Fraction(instance.feed_amt))
-            else:
+            elif user_settings.auto_food:
                 message = "%s cup was automatically dispensed for %s." % (
                     Fraction(instance.feed_amt),
                     instance.pet_name,
