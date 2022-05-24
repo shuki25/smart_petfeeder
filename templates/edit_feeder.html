@@ -15,6 +15,9 @@
 {% endblock %}
 
 {% block content %}
+    {% if not is_setup_done %}
+        {% include 'setup_banner.html' %}
+    {% else %}
     <div class="row mb-2">
         <div class="col-md-6">
             {% if current_route == "activate-feeder" %}
@@ -24,6 +27,7 @@
             {% endif %}
         </div>
     </div>
+    {% endif %}
     <div class="card mb-2">
         <div class="card-header align-items-center">
             <div class="row">

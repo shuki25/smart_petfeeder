@@ -14,8 +14,10 @@
         }
     </style>
 {% endblock %}
-
 {% block content %}
+    {% if not is_setup_done %}
+        {% include 'setup_banner.html' %}
+    {% endif %}
     <div class="row mb-2">
         <div class="col-md-6">
             <h2>Pets</h2>

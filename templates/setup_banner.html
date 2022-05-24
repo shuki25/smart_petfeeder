@@ -1,0 +1,48 @@
+<div class="row mt-2">
+    <div class="col-md-12 text-center">
+        <div class="page-header">
+            <h2>
+                Smart <span class="text-warning">PetFeeder</span>: Setting Up for the First Time
+            </h2>
+        </div>
+    </div>
+</div>
+<div class="row mt-3 mb-3">
+    <div class="d-flex mx-auto">
+        <div class="col-md-2 setup">
+            <div class="text-center mb-2">
+                <i class="fas fa-cog fa-3x {% if setup_phase == 1 %}text-primary{% elif current_route != "setup" and setup_phase > 1 %}text-warning{% endif %}"></i><br>
+            </div>
+            <div class="text-center {% if setup_phase == 1 %}text-primary{% elif current_route != "setup" and setup_phase > 1 %}text-warning{% else %}text-muted{% endif %}">Initial<br>Settings</div>
+        </div>
+        <div class="col-md-1 my-auto fa-3x">
+            <i class="fas fa-chevron-right text-warning"></i>
+        </div>
+        <div class="col-md-2 setup">
+            <div class="text-center mb-2">
+                <i class="fas fa-cat fa-3x {% if setup_phase == 2 %}text-primary{% elif current_route != "setup" and setup_phase > 2 %}text-warning{% endif %}"></i><br>
+            </div>
+            <div class="text-center {% if setup_phase == 2 %}text-primary{% elif current_route != "setup" and setup_phase > 2 %}text-warning{% else %}text-muted{% endif %}">Adding<br> Your Pets</div>
+        </div>
+        <div class="col-md-1 my-auto fa-3x">
+            <i class="fas fa-chevron-right text-warning"></i>
+        </div>
+        <div class="col-md-2 setup">
+            <div class="text-center mb-2">
+                <i class="fas fa-bolt fa-3x {% if setup_phase == 3 %}text-primary{% elif current_route != "setup" and setup_phase > 3 %}text-warning{% endif %}"></i><br>
+            </div>
+            <div class="text-center {% if setup_phase == 3 %}text-primary{% elif current_route != "setup" and setup_phase > 3 %}text-warning{% else %}text-muted{% endif %}">Activating<br>Your Feeder</div>
+        </div>
+        <div class="col-md-1 my-auto fa-3x">
+            <i class="fas fa-chevron-right text-warning"></i>
+        </div>
+        <div class="col-md-2 setup">
+            <div class="text-center mb-2">
+                <i class="fas fa-calendar fa-3x {% if setup_phase == 4 %}text-primary{% elif current_route != "setup" and setup_phase > 4 %}text-warning{% endif %}"></i><br>
+            </div>
+            <div class="text-center {% if setup_phase == 4 %}text-primary{% elif current_route != "setup" and setup_phase > 4 %}text-warning{% else %}text-muted{% endif %}">Set Up<br>Feeding Times</div>
+        </div>
+        <div class="col-md-1">
+        </div>
+    </div>
+</div>

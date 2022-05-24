@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block style %}
+    <style>
+        .setup i {
+            font-size: 2.6em;
+            width: 1.6em;
+            text-align: center;
+            line-height: 1.6em;
+            background: #666;
+            color: #fff;
+            border-radius: 0.8em; /* or 50% width & line-height */
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    {% include 'setup_banner.html' %}
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <h2>
+                Welcome {{ user.username }}!
+            </h2>
+            <p>
+                Thank you for purchasing Smart PetFeeder control board for your pet feeder. To begin setting up your
+                feeder, you will need to configure your account preferences, adding your beloved animals, activating
+                the control board and finally setting up feeding schedule.
+            </p>
+            <p>
+                <a class="btn btn-primary" href="{% url 'settings' %}">Begin</a>
+            </p>
+        </div>
+    </div>
+
+{% endblock %}

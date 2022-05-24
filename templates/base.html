@@ -11,7 +11,7 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.6.0/font/bootstrap-icons.css" integrity="sha384-7ynz3n3tAGNUYFZD3cWe5PDcE36xj85vyFkawcF6tIwxvIecqKvfwLiaFdizhPpN" crossorigin="anonymous">
         <!-- Toastr notification -->
-         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
     {% endblock %}
 
     {% block style %}
@@ -30,13 +30,23 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarCollapse">
                 <ul class="navbar-nav me-auto mb-2 mb-md-0">
-                {% for menu in menu_list %}
-                    {% if user.is_authenticated and menu.authenticated or not menu.authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if current_route == menu.route or current_route in menu.routes %} fw-bold text-warning active{% endif %}" href="{% url menu.route %}">{{ menu.item }}</a>
-                    </li>
-                    {% endif %}
-                {% endfor %}
+                    {% for menu in menu_list %}
+                        {% if user.is_authenticated and menu.authenticated or not menu.authenticated %}
+                            {% if not is_setup_done and not menu.is_setup %}
+                                <li class="nav-item">
+                                    <a class="nav-link {% if current_route == menu.route or current_route in menu.routes %} fw-bold text-warning active{% endif %}" href="{% url menu.route %}">{{ menu.item }}</a>
+                                </li>
+                            {% elif is_setup_done and menu.is_setup %}
+                                <li class="nav-item">
+                                    <a class="nav-link {% if current_route == menu.route or current_route in menu.routes %} fw-bold text-warning active{% endif %}" href="{% url menu.route %}">{{ menu.item }}</a>
+                                </li>
+                            {% elif menu.is_setup is None %}
+                                 <li class="nav-item">
+                                    <a class="nav-link {% if current_route == menu.route or current_route in menu.routes %} fw-bold text-warning active{% endif %}" href="{% url menu.route %}">{{ menu.item }}</a>
+                                </li>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
                 </ul>
                 {% if user.is_authenticated %}
                     {#                    <span class="navbar-text">{{ user.username }}</span>#}
@@ -79,7 +89,7 @@
                         {% csrf_token %}
                         <button type="submit" class="btn nav-link"><i class="fas fa-sign-out-alt"></i></button>
                     </form>
-{#                    <a class="nav-link" href="{% url 'account_logout' %}?next=/"><i class="fas fa-sign-out-alt"></i></a>#}
+                    {#                    <a class="nav-link" href="{% url 'account_logout' %}?next=/"><i class="fas fa-sign-out-alt"></i></a>#}
 
                 {% else %}
                     <a class="nav-link" href="{% url 'account_login' %}?next=/"><i class="fas fa-sign-in-alt"></i></a>
@@ -120,7 +130,8 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title text-warning" id="staticBackdropLabel"><i class="fas fa-exclamation-triangle me-2"></i> Warning: Permanent Removal</h3>
+                <h3 class="modal-title text-warning" id="staticBackdropLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Warning: Permanent Removal</h3>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -133,8 +144,12 @@
                     <input id="record_id" type="hidden" name="id" value="">
                     <input id="record_token" type="hidden" name="token" value="">
                 </form>
-                <button type="button" class="btn btn-danger" data-bs-dismiss="modal"><i class="fas fa-times-circle me-2"></i>No</button>
-                <button id="remove_confirm_btn" type="button" class="btn btn-primary"><i class="fas fa-check me-2"></i>Yes, I am Sure</button>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
+                    <i class="fas fa-times-circle me-2"></i>No
+                </button>
+                <button id="remove_confirm_btn" type="button" class="btn btn-primary"><i class="fas fa-check me-2"></i>Yes,
+                    I am Sure
+                </button>
             </div>
         </div>
     </div>
@@ -151,15 +166,15 @@
     <!-- jQuery UI -->
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
     <!-- Toastr notification -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
     <script>
-    {% if messages %}
-        $(() => {
-            {% for message in messages %}
-                toastr.{{ message.tags }}('{{ message }}');
-            {% endfor %}
-        });
-    {% endif %}
+        {% if messages %}
+            $(() => {
+                {% for message in messages %}
+                    toastr.{{ message.tags }}('{{ message }}');
+                {% endfor %}
+            });
+        {% endif %}
     </script>
 {% endblock %}
 {% block js %}

@@ -31,6 +31,9 @@
 {% endblock %}
 
 {% block content %}
+    {% if not is_setup_done %}
+        {% include 'setup_banner.html' %}
+    {% endif %}
     <form id="general_settings" method="post">
         <div class="card mb-2">
             <div class="card-header align-items-center">
@@ -39,6 +42,11 @@
                         <h4><i class="fas fa-cog me-2"></i> General Account Settings</h4>
                     </div>
                     <div class="col-md-4 my-auto">
+                        {% if not is_setup_done %}
+                            <span style="float: right">
+                                <button class="btn btn-secondary btn-sm ms-2 {% if not settings.timezone %}text-muted{% endif %}" {% if not settings.timezone %}disabled{% endif %} id="next_btn"><i id="save_icon" class="fas fa-chevron-right"></i> Next</button>
+                            </span>
+                        {% endif %}
                         <span style="float: right">
                             <button class="btn btn-primary btn-sm" id="save_btn"><i id="save_icon" class="fas fa-save"></i> Save</button>
                         </span>
@@ -91,19 +99,25 @@
                                 {% endif %}
                             </div>
                             <div id="smsHelp" class="form-text mb-3">Your Pushover User Key shown in your Pushover account settings.</div>
-                            <div id="registered_devices" class="input-group input-group-sm" {% if notification_settings.pushover_user_key == "" %}style="display: none;"{% endif %}>
-                                <span class="input-group-text" id="inputGroup-sizing-md" style="width: 150px">Registered Devices</span>
-                                <select id="device_list" class="form-select form-select-sm" name="device_list">
-                                    {% if notification_settings.pushover_devices != "" %}
-                                        <option value="">Not Selected</option>
-                                        <option value="{{ notification_settings.pushover_devices }}" selected>{{ notification_settings.pushover_devices }}</option>
-                                    {% else %}
-                                        <option value="">Click on Refresh Devices List</option>
-                                    {% endif %}
-                                </select>
-                                <button type="button" class="btn btn-primary btn-sm ms-2" id="refresh_btn"><i class="fas fa-sync-alt" id="refresh_icon"></i> Refresh Devices List</button>
+                            <div id="registered_devices" {% if notification_settings.pushover_user_key == "" %}style="display: none;"{% endif %}>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text" id="inputGroup-sizing-md" style="width: 150px">Registered Devices</span>
+                                    <select id="device_list" class="form-select form-select-sm" name="device_list">
+                                        {% if notification_settings.pushover_devices != "" %}
+                                            <option value="">Not Selected</option>
+                                            <option value="{{ notification_settings.pushover_devices }}" selected>{{ notification_settings.pushover_devices }}</option>
+                                        {% else %}
+                                            <option value="">Click on Refresh Devices List</option>
+                                        {% endif %}
+                                    </select>
+                                    <button type="button" class="btn btn-primary btn-sm ms-2" id="refresh_btn">
+                                        <i class="fas fa-sync-alt" id="refresh_icon"></i> Refresh Devices List
+                                    </button>
+                                </div>
+                                <div for="device_list" class="form-text mb-3">Choose one of registered devices you want
+                                    to receive notifications.
+                                </div>
                             </div>
-                            <div for="device_list" class="form-text mb-3">Choose one of registered devices you want to receive notifications.</div>
                             <span>Choose types of notification you would want to receive:</span>
                             <div class="form-check form-switch">
                                   <input class="form-check-input" type="checkbox" name="notification_options" value="auto_food" role="switch" id="auto_food" {% if notification_settings.auto_food %}checked{% endif %}>
@@ -151,6 +165,10 @@
                 $('#save_icon').removeClass('fa-save');
                 $('#save_icon').addClass('fas fa-sync-alt').addClass('fa-spin');
                 $('#general_settings').submit();
+            });
+            $('#next_btn').click(function (e) {
+               window.location.href="{% url 'add-pet' %}";
+               return false;
             });
             $('#cancel_btn').click(function (e) {
                 window.location.href = "{% url 'pets' %}";

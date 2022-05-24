@@ -4,6 +4,25 @@
 - item: "Dashboard"
   route: dashboard
   authenticated: True
+  is_setup: 1
+- item: "Setup"
+  route: setup
+  routes:
+    - setup
+    - pets
+    - edit-pet
+    - add-pet
+    - activate-feeder
+    - edit-feeder
+    - feeders
+    - schedule
+    - edit-feed-time
+    - add-feed-time
+    - toggle-feed-time
+    - delete-feed-time
+    - settings
+  authenticated: True
+  is_setup: 0
 - item: "Pets"
   route: pets
   routes:
@@ -11,6 +30,7 @@
     - edit-pet
     - add-pet
   authenticated: True
+  is_setup: 1
 - item: "Feeders"
   route: feeders
   routes:
@@ -18,6 +38,7 @@
     - edit-feeder
     - activate-feeder
   authenticated: True
+  is_setup: 1
 - item: "Schedule"
   route: schedule
   routes:
@@ -27,9 +48,12 @@
     - toggle-feed-time
     - delete-feed-time
   authenticated: True
+  is_setup: 1
 - item: "Settings"
   route: settings
   authenticated: True
+  is_setup: 1
 - item: "Help"
   route: help
   authenticated: False
+

@@ -16,14 +16,26 @@
     </style>
 {% endblock %}
 {% block content %}
+    {% if not is_setup_done %}
+        {% include 'setup_banner.html' %}
+        <form id="finish_setup" method="post" action="{% url 'setup' %}">
+            {% csrf_token %}
+            <input type="hidden" name="is_setup_done" value="1">
+        </form>
+    {% endif %}
     <div class="row mb-2">
         <div class="col-md-6">
             <h2>Feeding Schedule</h2>
         </div>
         <div class="col-md-6">
-            <span style="float: right">
-                    <a class="btn btn-primary btn-sm" href="{% url 'add-feed-time' %}"><i class="fas fa-plus"></i> Add a New Feeding Time</a>
+            {% if not is_setup_done %}
+                <span style="float: right">
+                    <button class="btn btn-success btn-sm ms-2 {% if not num_record %}text-white-50{% endif %}" {% if not num_record %}disabled{% endif %} id="finish_setup_btn"><i id="save_icon" class="fas fa-check"></i> Finish Setup</button>
                 </span>
+            {% endif %}
+            <span style="float: right">
+                <a class="btn btn-primary btn-sm" href="{% url 'add-feed-time' %}"><i class="fas fa-plus"></i> Add a New Feeding Time</a>
+            </span>
         </div>
     </div>
     {% if num_record == 0 %}
@@ -130,6 +142,9 @@
             $('#remove_confirm_btn').click(function (e) {
                 $(this).html('<i class="fas fa-spinner fa-spin"></i> Removing...');
                 $('#remove_record').submit()
+            });
+            $('#finish_setup_btn').click(function (e) {
+                $('#finish_setup').submit()
             });
         })
     </script>

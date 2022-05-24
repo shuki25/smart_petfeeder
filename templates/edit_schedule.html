@@ -17,6 +17,9 @@
     </style>
 {% endblock %}
 {% block content %}
+    {% if not is_setup_done %}
+        {% include 'setup_banner.html' %}
+    {% endif %}
     <form id="feeding_time" method="post">
         <input id="dow-0" type="hidden" name="dow" value="{%  if schedule.dow|bitwise_and:1 %}1{% else %}0{% endif %}">
         <input id="dow-1" type="hidden" name="dow" value="{%  if schedule.dow|bitwise_and:2 %}2{% else %}0{% endif %}">

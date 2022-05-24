@@ -668,8 +668,12 @@ def settings(request):
         settings_list = ["timezone, tz_esp32"]
         try:
             ptz = PosixTimezone.objects.get(id=request.POST["posix_timezone_id"])
-            old_settings = Settings.objects.filter(user_id=request.user.id, name="timezone").first()
-            if old_settings.value != ptz.timezone:
+            rs = Settings.objects.filter(user_id=request.user.id, name="timezone").first()
+            old_settings = None
+            if rs:
+                old_settings = rs.value
+
+            if old_settings != ptz.timezone:
                 log.info("Timezone changed, updating feeding times to %s timezone", ptz.timezone)
                 update_setting("timezone", ptz.timezone, request.user.id)
                 update_setting("tz_esp32", ptz.posix_tz, request.user.id)
@@ -800,7 +804,16 @@ def validate_device_id(request, device_id):
 
 @login_required
 def setup(request):
-    return render(request, "placeholder.html", context={"title": "Setup"})
+    if request.method == "POST":
+        is_setup_done = request.POST.get("is_setup_done", 0)
+        log.info("is setup finished? is_setup_done: %s", is_setup_done)
+        rs, is_created = Settings.objects.get_or_create(user_id=request.user.id, name="is_setup_done")
+        rs.value = int(is_setup_done)
+        rs.save()
+        messages.success(request, "Initial account setup is complete.")
+        return HttpResponseRedirect("/dashboard/")
+
+    return render(request, "setup.html", context={"title": "Setup"})
 
 
 @login_required

@@ -19,13 +19,6 @@ from rest_framework.authtoken.models import Token
 log = logging.getLogger(__name__)
 
 
-# Automatically generate auth token by catching user's post_save signal
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_auth_token(sender, instance=None, created=False, **kwargs):
-    if created:
-        Token.objects.create(user=instance)
-
-
 # Create your models here.
 class AnimalType(models.Model):
     name = models.CharField(max_length=40)
@@ -261,6 +254,14 @@ class Carousel(models.Model):
 
 
 # Automatically add event to event queue by triggering post_save signal
+# Automatically generate auth token by catching user's post_save signal
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
+        Settings.objects.create(user=instance, name="is_setup_done", value="0")
+
+
 @receiver(post_save, sender=FeedingSchedule)
 def add_event_queue_feeding_schedule_save(sender, instance=None, created=False, **kwargs):
     # eq = EventQueue.objects.filter(device_owner_id=instance.device_owner_id, event_code=300, status_code="P")
@@ -308,9 +309,11 @@ def add_event_queue4(sender, instance=None, created=False, **kwargs):
         user_settings = NotificationSettings.objects.filter(user_id=device.user_id).first()
         if user_settings.pushover_user_key != "":
             if instance.feed_type == "R" and user_settings.manual_food:
-                message = "%s cup was manually remote dispensed." % (Fraction(instance.feed_amt))
+                message = "%s cup was manually dispensed from a remote computer or mobile device." % (
+                    Fraction(instance.feed_amt)
+                )
             elif instance.feed_type == "M" and user_settings.manual_food:
-                message = "%s cup was manually dispensed." % (Fraction(instance.feed_amt))
+                message = "%s cup was manually dispensed from the feeder." % (Fraction(instance.feed_amt))
             elif user_settings.auto_food:
                 message = "%s cup was automatically dispensed for %s." % (
                     Fraction(instance.feed_amt),
