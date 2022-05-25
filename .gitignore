@@ -332,3 +332,5 @@ nextion/
 # Ignore files with API/secret keys
 *secret*
 /db.sqlite3
+app/media/*
+/media/
