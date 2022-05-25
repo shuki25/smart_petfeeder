@@ -32,9 +32,9 @@
                 <div class="col-md-4 my-auto">
                     <span style="float: right">
                         {% if current_route == 'add-pet' %}
-                        <button class="btn btn-primary btn-sm" id="save_btn"><i id="save_icon" class="fas fa-plus"></i> Add New Pet</button>
+                            <button class="btn btn-primary btn-sm" id="save_btn"><i id="save_icon" class="fas fa-plus"></i> Add New Pet</button>
                         {% else %}
-                        <button class="btn btn-primary btn-sm" id="save_btn"><i id="save_icon" class="fas fa-save"></i> Save</button>
+                            <button class="btn btn-primary btn-sm" id="save_btn"><i id="save_icon" class="fas fa-save"></i> Save</button>
                         {% endif %}
                         <button class="btn btn-secondary btn-sm" id="cancel_btn"><i class="fas fa-times"></i> Cancel</button>
                     </span>
@@ -44,17 +44,33 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-4">
-                    <div class="d-flex justify-content-center">
-                         <img class="pet" src="{% static "cat-placeholder.png" %}" alt="petnet feeder">
+                    <div id="pet_photo_frame" {% if not pet.photo %}style="display: none;"{% endif %}>
+                        <div class="d-flex justify-content-center">
+                             <img id="pet_photo" data-media-path="{% get_media_prefix %}" class="pet" src="{% get_media_prefix %}/{{ pet.photo }}" alt="petnet feeder">
+                        </div>
+                        <div class="d-flex justify-content-center mt-3">
+                            <button class="btn btn-warning" id="replace_btn"><i id="feed_icon" class="fas fa-sync-alt"></i> Replace Photo</button>
+                        </div>
                     </div>
-                    <div class="d-flex justify-content-center mt-3">
-                        <button class="btn btn-warning" id="upload_btn"><i id="feed_icon" class="fas fa-file-upload"></i> Upload Photo</button>
+                    <div id="pet_photo_uploader" class="justify-content-center" {% if pet.photo %}style="display: none;"{% endif %}>
+                        <div class="well text-muted text-center me-3 ms-3 mb-3 bg-gray-dark mt-3 w-75"
+                             style="padding-top: 1rem; padding-bottom: 1rem; border: 2px solid;">
+                            <div class="mb-3"><h4>Your Pet Photo</h4></div>
+                            <span class="fas fa-arrow-down pb-3 fa-2x"></span><br>
+                            <h4>Drop your pet photo<br> here to upload</h4>
+
+                            <input id="fileupload" type="file" name="photo" style="display: none;" data-url="{% url 'upload-pet-photo' %}" data-form-data='{"csrfmiddlewaretoken": "{{ csrf_token }}", "id": "{{ pet.id }}"}'>
+                            <button type="button" class="btn btn-warning js-upload-files mt-3 mr-2">
+                                <span class="fas fa-file-upload pr-2"></span> Upload a Photo
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-8">
                     <div class="mt-2">
                         <form id="about_pet" method="post">
                             {% csrf_token %}
+                            <input id="pet_id" type="hidden" name="pet_id" value="{{ pet.id }}">
                             <h3 class="text-primary">About Your Pet</h3>
                             <div class="input-group input-group-sm mb-3">
                                 <span class="input-group-text" id="inputGroup-sizing-md" style="width: 100px">Name</span>
@@ -89,8 +105,29 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="modal-progress" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Uploading your pet photo...</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated progress-bar-warning" role="progressbar" style="width: 0">
+                            0%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 {% block js %}
+    {# JQUERY FILE UPLOAD SCRIPTS #}
+    <script src="{% static 'js/jquery-file-upload/vendor/jquery.ui.widget.js' %}"></script>
+    <script src="{% static 'js/jquery-file-upload/jquery.iframe-transport.js' %}"></script>
+    <script src="{% static 'js/jquery-file-upload/jquery.fileupload.js' %}"></script>
+    <script src="{% static 'js/photo_upload.js' %}"></script>
     <script>
         $(() => {
             $('#save_btn').click(function (e) {

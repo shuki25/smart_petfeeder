@@ -120,7 +120,7 @@
                     <div class="row">
                         <div class="col-md-4">
                             <div class="d-flex justify-content-center">
-                                <img class="pet" src="{% static "cat-placeholder.png" %}" alt="petnet feeder">
+                                <img class="pet" src="{% if pet.info.photo %}{% get_media_prefix %}{{ pet.info.photo }}{% else %}{% static "img/cat-placeholder.png" %}{% endif %}" alt="{{ pet.info.name }}">
                             </div>
                             <div class="d-flex justify-content-center mt-3">
                                 <h3>{{ pet.info.name }}</h3>

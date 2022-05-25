@@ -2,17 +2,25 @@ import datetime
 import hashlib
 import json
 import logging
+import os
+import uuid
 from itertools import chain
 from time import sleep
 
 import pytz
 from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect, render
+from django.template.defaultfilters import filesizeformat
+from PIL import Image
 
+from app.tasks import send_pushover_notification
+
+from .forms import PetForm
 from .models import (
     AnimalSize,
     AnimalType,
@@ -32,10 +40,10 @@ from .models import (
     Settings,
 )
 from .pushover.client import Pushover
-from app.tasks import send_pushover_notification
 from .utils import (
     generate_device_key,
     get_next_feeding,
+    resize_and_crop,
     seconds_to_days,
     update_has_event_tasks,
     update_setting,
@@ -44,6 +52,7 @@ from .utils import (
 )
 
 log = logging.getLogger(__name__)
+media_root = settings.MEDIA_ROOT
 
 
 # Create your views here.
@@ -352,6 +361,57 @@ def view_pets(request):
 
 
 @login_required
+def upload_pet_photo(request):
+    media_base = media_root
+    data = {"is_valid": False, "message": "Bad method"}
+    if request.method == "POST":
+        form = PetForm(request.POST, request.FILES)
+        if form.is_valid():
+            pet_id = request.POST.get("id", None)
+            if pet_id == "None":
+                pet_id = None
+            try:
+                if pet_id is not None:
+                    pet = Pet.objects.get(id=pet_id, user_id=request.user.id)
+                    if pet.photo:
+                        os.remove(media_base + str(pet.photo))
+                else:
+                    raise ObjectDoesNotExist
+            except ObjectDoesNotExist:
+                pet = Pet(user_id=request.user.id)
+            pet.photo = request.FILES["photo"]
+            pet.save()
+            img_path = media_base + str(pet.photo)
+            log.info("img_path: %s" % img_path)
+            # modified_photo = str(pet.photo).split(".")[:-1][0] + "-thumb.png"
+            modified_photo = "pet_photos/" + str(uuid.uuid4()) + ".png"
+            img_modified_path = media_base + modified_photo
+            log.info("modified_path: %s" % img_modified_path)
+            i = 20
+            while i > 0:
+                if os.path.isfile(img_path) is False:
+                    i -= 1
+                    if i == 0:
+                        data = {"is_valid": False, "message": "Upload failed"}
+                        return JsonResponse(data)
+                    sleep(0.5)
+                else:
+                    break
+            resize_and_crop(img_path, img_modified_path, (213, 316), crop_type="middle")
+            pet.photo = modified_photo
+            os.remove(img_path)
+            pet.save()
+
+            data = {
+                "is_valid": True,
+                "message": "Pet photo was successfully uploaded.",
+                "pet_id": pet.id,
+                "path": str(pet.photo),
+            }
+    return JsonResponse(data)
+
+
+@login_required
 def add_edit_pet(request, pet_id=None):
     s = Settings.objects.filter(user_id=request.user.id).values()
     user_settings = {row["name"]: row["value"] for row in s}
@@ -362,7 +422,11 @@ def add_edit_pet(request, pet_id=None):
     error = False
 
     if pet_id is None:
-        pet = Pet(user_id=request.user.id)
+        pet_id = request.POST.get("pet_id")
+        if pet_id != "None" and pet_id is not None:
+            pet = Pet.objects.get(id=pet_id, user_id=request.user.id)
+        else:
+            pet = Pet(user_id=request.user.id)
         title = "Adding a New Pet Profile"
     else:
         try:
@@ -428,7 +492,6 @@ def add_edit_pet(request, pet_id=None):
         "animal_type": animal_type,
         "action": "edit",
     }
-
     return render(request, "edit_pet.html", context=context)
 
 

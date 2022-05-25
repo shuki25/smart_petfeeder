@@ -95,11 +95,12 @@ class DeviceOwner(models.Model):
 
 class Pet(models.Model):
     user = models.ForeignKey(User, models.CASCADE)
-    name = models.CharField(max_length=25)
+    name = models.CharField(max_length=25, default="Unnamed Pet")
     animal_type = models.ForeignKey(AnimalType, models.CASCADE, null=True)
-    animal_size = models.ForeignKey(AnimalSize, models.CASCADE)
+    animal_size = models.ForeignKey(AnimalSize, models.CASCADE, null=True)
     weight = models.FloatField(default=0)
     daily_calories_intake = models.IntegerField(default=0)
+    photo = models.ImageField(upload_to="pet_photos/", null=True)
 
 
 class FeedingSchedule(models.Model):
