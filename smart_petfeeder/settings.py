@@ -27,6 +27,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "smartpetfeeder.net", "*"]
 CSRF_TRUSTED_ORIGINS = ["https://smartpetfeeder.net"]
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+
+# SECURE_SSL_REDIRECT must be set to False if the site is behind nginx-reverse-proxy and is using Cloudflare
+SECURE_SSL_REDIRECT = False
 
 # Application definition
 
