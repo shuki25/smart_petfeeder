@@ -197,13 +197,7 @@ from .logger import LOGGING  # noqa
 SITE_ID = 1
 
 MARKDOWNIFY = {
-    "default": {
-        "WHITELIST_TAGS": [
-            "a",
-            "p",
-            "h1",
-        ]
-    },
+    "default": {"WHITELIST_TAGS": ["a", "p", "h1" "h2", "li", "ul", "ol"]},
     "alternative": {
         "WHITELIST_TAGS": [
             "a",
