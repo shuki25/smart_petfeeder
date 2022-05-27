@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import Article, ArticleCategory, Carousel, Device, FeederModel
+from .models import Article, ArticleCategory, Carousel, Device, FeederModel, ControlBoardModel, FirmwareUpdate
 
 
 class ArticleCategoryAdmin(admin.ModelAdmin):
@@ -29,8 +29,18 @@ class DeviceAdmin(admin.ModelAdmin):
     list_filter = ["id", "control_board_identifier"]
 
 
+class ControlBoardModelAdmin(admin.ModelAdmin):
+    list_display = ("id", "name", "revision", "description")
+
+
+class FirmwareUpdateAdmin(admin.ModelAdmin):
+    list_display = ("id", "version", "control_board", "created_at")
+
+
 admin.site.register(ArticleCategory, ArticleCategoryAdmin)
 admin.site.register(Article, ArticleAdmin)
 admin.site.register(Carousel, CarouselAdmin)
 admin.site.register(FeederModel, FeederModelAdmin)
 admin.site.register(Device, DeviceAdmin)
+admin.site.register(ControlBoardModel, ControlBoardModelAdmin)
+admin.site.register(FirmwareUpdate, FirmwareUpdateAdmin)

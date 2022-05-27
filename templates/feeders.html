@@ -3,6 +3,7 @@
 {% load static %}
 {% load fractions %}
 {% load app_utils %}
+{% load markdownify %}
 {% block style %}
     <style>
         .feeder {
@@ -10,6 +11,7 @@
             opacity: 70%;
             box-shadow: 5px 5px 5px 0px #000000;
         }
+
         ul.log {
             margin-top: 0;
             list-style-position: inside;
@@ -38,97 +40,134 @@
         </div>
     </div>
     {% if num_feeders == 0 %}
-    <div class="card mb-2">
-        <div class="card-header align-items-center-center">
-            <h5 class="text-warning"><i class="fas fa-exclamation-triangle"></i> No Registered Feeders</h5>
+        <div class="card mb-2">
+            <div class="card-header align-items-center-center">
+                <h5 class="text-warning"><i class="fas fa-exclamation-triangle"></i> No Registered Feeders</h5>
+            </div>
+            <div class="card-body">
+                <p>You currently do not have any registered feeder. If you have installed a control board in your
+                    feeder, please scan the QR Code to activate your control board. Alternatively, you can activate a
+                    feeder by clicking on the "Activate a Feeder" button.</p>
+            </div>
         </div>
-        <div class="card-body">
-            <p>You currently do not have any registered feeder. If you have installed a control board in your feeder, please scan the QR Code to activate your control board. Alternatively, you can activate a feeder by clicking on the "Activate a Feeder" button.</p>
-        </div>
-    </div>
     {% else %}
-    {% for device in info %}
-    <div class="card mb-2">
-        <div class="card-header align-items-center">
-            <div class="row">
-                <div class="col-md-8">
-                    <h5><i class="fas fa-paw"></i> {{ device.device.name }}</h5>
-                </div>
-                <div class="col-md-4 my-auto">
-                    <span style="float: right">
-                        <a class="btn btn-primary btn-sm" href="{% url 'edit-feeder' device.device.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
-                        <button class="delete_btn btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#delete_warning" data-id="{{ device.device.id }}" data-token="{{ device.device.id|xss_tokenize:'remove_feeder' }}"><i class="fas fa-trash-alt"></i> Remove</button>
-                    </span>
-                </div>
-            </div>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4 my-auto">
-                    <div class="d-flex justify-content-center">
-                         <img class="feeder mb-3" src="{% static device.device.feeder_model.image_path %}" alt="{{ device.device.feeder_model.brand_name }} {{ device.device.feeder_model.model_name }}">
-                    </div>
-                </div>
-                <div class="col-md-8">
+        {% for device in info %}
+            <div class="card mb-2">
+                <div class="card-header align-items-center">
                     <div class="row">
-                        <h5 class="text-primary">Feeder / Control Board</h5>
-                        <div class="col-md-auto">
-                            <span class="text-warning">Device ID:</span> {{ device.device.device.control_board_identifier }}<br>
-                            <span class="text-warning">Feeder Model:</span> {{ device.device.feeder_model.brand_name }} - {{ device.device.feeder_model.model_name }}<br>
-                            <span class="text-warning">Feeder Timezone:</span> {{ timezone }}<br>
+                        <div class="col-md-8">
+                            <h5><i class="fas fa-paw"></i> {{ device.device.name }}</h5>
                         </div>
-                        <div class="col-md-auto">
-                            <span class="text-warning">Feeder Status:</span>
-                            {% if device.online == "Offline" %}
-                                <span class="text-danger"><i class="fas fa-circle me-2"></i>{{ device.online }}</span><br>
-                            {% else %}
-                                <span class="text-success">{% if not device.device_status.on_power %}
-                                    <span class="text-danger me-2"><strong><i class="fas fa-battery-three-quarters"></i></strong></span>{% else %}
-                                    <span class="text-warning me-2"><strong><i class="fas fa-plug"></i></strong></span>
-                                {% endif %}<i class="fas fa-circle me-2"></i>{{ device.online }}</span><br>
-                            {% endif %}
-                            {% timezone timezone %}
-                                <span class="text-warning">Last Ping:</span> {{ device.device_status.last_ping }}<br>
-                            {% endtimezone %}
-                            {% if device.online == "Offline" %}
-                                <span class="text-warning">Last Connected:</span> {{ device.uptime }}<br>
-                            {% else %}
-                                <span class="text-warning">Uptime:</span> {{ device.uptime }}<br>
-                            {% endif %}
+                        <div class="col-md-4 my-auto">
+                            <span style="float: right">
+                                <a class="btn btn-primary btn-sm" href="{% url 'edit-feeder' device.device.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
+                                <button class="delete_btn btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#delete_warning" data-id="{{ device.device.id }}" data-token="{{ device.device.id|xss_tokenize:'remove_feeder' }}"><i class="fas fa-trash-alt"></i> Remove</button>
+                            </span>
                         </div>
                     </div>
-                    <div class="row mt-2">
-                    <h5 class="text-primary">Back-up Power</h5>
-                        <div class="col-md-5">
-                            {% if device.device_status.on_power and device.online == "Online" and device.device_status.battery_crate >= 0.10 %}
-                                <span class="text-danger"><i class="fas fa-bolt"></i></span>
-                            {% endif %}
-                            <span class="text-warning d-inline">Battery ({{ device.device_status.battery_voltage }}V):<br></span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 my-auto">
+                            <div class="d-flex justify-content-center">
+                                <img class="feeder mb-3" src="{% static device.device.feeder_model.image_path %}" alt="{{ device.device.feeder_model.brand_name }} {{ device.device.feeder_model.model_name }}">
+                            </div>
                         </div>
-                        <div class="col-md-7 text-white-50">
-                            {% if device.device_status.on_power and device.device_status.battery_crate >= 0.10 and device.online == "Online" and device.device_status.battery_soc < 99.6 %}
-                                <span style="float: right;">Charging Time to Full: {{ device.crate_time }}</span>
-                            {% elif device.device_status.battery_crate < 0 and device.online == "Online" and not device.device_status.on_power %}
-                                <span style="float: right">Time Remaining: {{ device.crate_time }}</span>
+                        <div class="col-md-8">
+                            <div class="row">
+                                <h5 class="text-primary">Feeder / Control Board</h5>
+                                <div class="col-md-auto">
+                                    <span class="text-warning">Device ID:</span> {{ device.device.device.control_board_identifier }}<br>
+                                    <span class="text-warning">Current Firmware:</span> {{ device.device_status.firmware_version }}<br>
+                                    <span class="text-warning">Feeder Model:</span> {{ device.device.feeder_model.brand_name }}
+                                    - {{ device.device.feeder_model.model_name }}<br>
+                                    <span class="text-warning">Feeder Timezone:</span> {{ timezone }}<br>
+                                </div>
+                                <div class="col-md-auto">
+                                    <span class="text-warning">Feeder Status:</span>
+                                    {% if device.online == "Offline" %}
+                                        <span class="text-danger"><i class="fas fa-circle me-2"></i>{{ device.online }}</span>
+                                        <br>
+                                    {% else %}
+                                        <span class="text-success">{% if not device.device_status.on_power %}
+                                            <span class="text-danger me-2"><strong><i class="fas fa-battery-three-quarters"></i></strong></span>{% else %}
+                                            <span class="text-warning me-2"><strong><i class="fas fa-plug"></i></strong></span>
+                                        {% endif %}<i class="fas fa-circle me-2"></i>{{ device.online }}</span><br>
+                                    {% endif %}
+                                    {% timezone timezone %}
+                                        <span class="text-warning">Last Ping:</span>
+                                        {{ device.device_status.last_ping }}<br>
+                                    {% endtimezone %}
+                                    {% if device.online == "Offline" %}
+                                        <span class="text-warning">Last Connected:</span> {{ device.uptime }}<br>
+                                    {% else %}
+                                        <span class="text-warning">Uptime:</span> {{ device.uptime }}<br>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if device.device_status.firmware_version != device.firmware_update.version and device.firmware_update.version != '' %}
+                            <form id="upgrade_firmware" method="post" action="{% url 'upgrade-firmware' %}">
+                                {% csrf_token %}
+                                <input id="device_owner_id" type="hidden" name="device_owner_id" value="">
+                            </form>
+                            <div class="row mt-2">
+                                <div class="col-md-6">
+                                    <h4 class="text-warning"><i class="fas fa-exclamation-circle me-1"></i> Firmware Update Available</h4>
+                                </div>
+                                <div class="col-md-6">
+                                    <span style="float: left">
+                                        <button data-device-id="{{ device.device.id }}" class="upgrade_btn delete_btn btn btn-primary btn-sm"><i class="fas fa-cloud-upload-alt"></i> Upgrade Firmware</button>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-6">
+                                    <span>Your current firmware ({{ device.device_status.firmware_version }}) is currently outdated. The new firmware ({{ device.firmware_update.version }}) is available for update. Highly recommended to upgrade your feeder control board.</span>
+                                </div>
+                                <div class="col-md-6">
+                                    <span class="text-warning">What's new in this upgrade:</span><br>
+                                    <span>{{ device.firmware_update.description|markdownify }}</span>
+                                </div>
+                            </div>
                             {% endif %}
-                        </div>
-                    </div>
-                    <div class="progress mb-3">
-                        <div class="progress-bar {% if device.device_status.battery_soc >= 25 %}bg-warning{% else %}bg-danger{% endif %}" role="progressbar" style="width: {{ device.device_status.battery_soc }}%" aria-valuenow="device.device_status.battery_soc" aria-valuemin="0" aria-valuemax="100"></div>
-                    </div>
+                            <div class="row mt-2">
+                                <h5 class="text-primary">Back-up Power</h5>
+                                <div class="col-md-5">
+                                    {% if device.device_status.on_power and device.online == "Online" and device.device_status.battery_crate >= 0.10 %}
+                                        <span class="text-danger"><i class="fas fa-bolt"></i></span>
+                                    {% endif %}
+                                    <span class="text-warning d-inline">Battery ({{ device.device_status.battery_voltage }}V):<br></span>
+                                </div>
+                                <div class="col-md-7 text-white-50">
+                                    {% if device.device_status.on_power and device.device_status.battery_crate >= 0.10 and device.online == "Online" and device.device_status.battery_soc < 99.6 %}
+                                        <span style="float: right;">Charging Time to Full: {{ device.crate_time }}</span>
+                                    {% elif device.device_status.battery_crate < 0 and device.online == "Online" and not device.device_status.on_power %}
+                                        <span style="float: right">Time Remaining: {{ device.crate_time }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-12">
+                                    <div class="progress mb-3">
+                                        <div class="progress-bar {% if device.device_status.battery_soc >= 25 %}bg-warning{% else %}bg-danger{% endif %}" role="progressbar" style="width: {{ device.device_status.battery_soc }}%" aria-valuenow="device.device_status.battery_soc" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
 
-                    <h5 class="text-primary">Pet Food Hopper</h5>
-                    <span class="text-warning">Hopper Capacity:</span> {{ device.device.feeder_model.hopper_capacity }} cups<br>
-                    <span class="text-warning">Manual Feed Portion Size:</span> {% display_fraction device.device.manual_motor_timing.feed_amount %} cup<br>
-                    <span class="text-warning">Estimated Current Hopper Level:<br></span>
-                    <div class="progress mb-3">
-                        <div class="progress-bar {% if device.device_status.hopper_level >= 20 %}bg-warning{% else %}bg-danger{% endif %}" role="progressbar" style="width: {{ device.device_status.hopper_level }}%" aria-valuenow="{{ device.device_status.hopper_level }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                    <h5 class="text-primary">Pet Food Hopper</h5>
+                                    <span class="text-warning">Hopper Capacity:</span> {{ device.device.feeder_model.hopper_capacity }}
+                                    cups<br>
+                                    <span class="text-warning">Manual Feed Portion Size:</span> {% display_fraction device.device.manual_motor_timing.feed_amount %}
+                                    cup<br>
+                                    <span class="text-warning">Estimated Current Hopper Level:<br></span>
+                                    <div class="progress mb-3">
+                                        <div class="progress-bar {% if device.device_status.hopper_level >= 20 %}bg-warning{% else %}bg-danger{% endif %}" role="progressbar" style="width: {{ device.device_status.hopper_level }}%" aria-valuenow="{{ device.device_status.hopper_level }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-    {% endfor %}
+        {% endfor %}
     {% endif %}
 {% endblock %}
 {% block modal %}
@@ -147,12 +186,18 @@
                 $('#remove_record').attr("action", "{% url 'remove-feeder' %}");
             });
             $('#remove_confirm_btn').click(function (e) {
-                $(this).html('<i class="fas fa-spinner fa-spin"></i> Removing...');
+                $(this).html('<i class="fas fa-spinner fa-spin me-1"></i> Removing...');
                 $('#remove_record').submit()
             });
             $('#next_btn').click(function (e) {
-               window.location.href="{% url 'add-feed-time' %}";
-               return false;
+                window.location.href = "{% url 'add-feed-time' %}";
+                return false;
+            });
+            $('.upgrade_btn').click(function (e) {
+               let id = $(this).data("device-id");
+               $(this).html('<i class="fas fa-spinner fa-spin me-1"></i> Upgrading...');
+               $('#device_owner_id').val(id);
+               $('#upgrade_firmware').submit()
             });
 
         })

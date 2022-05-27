@@ -29,6 +29,7 @@ from .models import (
     DeviceOwner,
     DeviceStatus,
     EventQueue,
+    FirmwareUpdate,
     FeederModel,
     FeedingLog,
     FeedingSchedule,
@@ -574,6 +575,12 @@ def feeders(request):
         else:
             crate_time = 0
 
+        firmware_update = (
+            FirmwareUpdate.objects.filter(control_board__revision=device_status.control_board_revision)
+            .order_by("-created_at")
+            .first()
+        )
+        log.info("firmware version: %s", firmware_update.version)
         device_info.append(
             {
                 "uptime": seconds_to_days(uptime(device_status.last_boot)),
@@ -581,6 +588,7 @@ def feeders(request):
                 "online": "Online" if online else "Offline",
                 "device_status": device_status,
                 "crate_time": str(datetime.timedelta(seconds=crate_time)),
+                "firmware_update": firmware_update,
             }
         )
         i += 1
@@ -877,6 +885,30 @@ def setup(request):
         return HttpResponseRedirect("/dashboard/")
 
     return render(request, "setup.html", context={"title": "Setup"})
+
+
+@login_required
+def upgrade_firmware(request):
+    if request.method == "POST":
+        device_owner_id = request.POST.get("device_owner_id", None)
+        if device_owner_id:
+            try:
+                device = DeviceOwner.objects.get(user_id=request.user.id, id=device_owner_id)
+                event = EventQueue(event_code=800, device_owner_id=device.id)
+                event.save()
+                status, is_created = DeviceStatus.objects.get_or_create(device_id=device.device_id)
+                status.has_event = True
+                status.save()
+                messages.success(
+                    request,
+                    "Firmware Upgrade in progress. Please allow few minutes for the upgrade to complete. Do not turn off the feeder during the upgrade.",
+                )
+            except ObjectDoesNotExist:
+                messages.error(request, "Unknown device. Upgrade cancelled.")
+                return HttpResponseRedirect("/feeders/")
+        else:
+            messages.error(request, "Unknown device. Upgrade cancelled.")
+        return HttpResponseRedirect("/feeders/?upgrade_active=1")
 
 
 @login_required

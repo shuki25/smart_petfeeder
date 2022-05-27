@@ -175,6 +175,8 @@ class EventQueue(models.Model):
 
 class DeviceStatus(models.Model):
     device = models.ForeignKey(Device, models.CASCADE)
+    control_board_revision = models.CharField(max_length=5, null=True)
+    firmware_version = models.CharField(max_length=15, null=True)
     last_boot = models.DateTimeField(auto_now_add=True)
     last_ping = models.DateTimeField(auto_now_add=True)
     battery_voltage = models.FloatField(null=True, default=0.0)
@@ -252,6 +254,22 @@ class Carousel(models.Model):
     is_visible = models.BooleanField(default=False)
     start_datetime = models.DateTimeField(null=True)
     end_datetime = models.DateTimeField(null=True)
+
+
+class ControlBoardModel(models.Model):
+    name = models.CharField(max_length=16)
+    revision = models.CharField(max_length=5)
+    description = models.CharField(max_length=255, null=True)
+
+    def __str__(self):
+        return self.description
+
+
+class FirmwareUpdate(models.Model):
+    version = models.CharField(max_length=15)
+    control_board = models.ForeignKey(ControlBoardModel, models.CASCADE)
+    description = models.TextField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 # Automatically add event to event queue by triggering post_save signal

@@ -267,12 +267,23 @@ def heartbeat(request):
         else:
             return Response({"error": "bad request"}, status=status.HTTP_400_BAD_REQUEST)
 
+        attr_list = [
+            "battery_soc",
+            "battery_voltage",
+            "battery_crate",
+            "on_power",
+            "control_board_revision",
+            "firmware_version",
+        ]
         device_status = DeviceStatus.objects.get(device_id=device_id)
         device_status.last_ping = timezone.now()
-        device_status.battery_soc = body["battery_soc"]
-        device_status.battery_voltage = body["battery_voltage"]
-        device_status.battery_crate = body["battery_crate"]
-        device_status.on_power = body["on_power"]
+        for a in attr_list:
+            if a in body:
+                setattr(device_status, a, body[a])
+        # device_status.battery_soc = body["battery_soc"]
+        # device_status.battery_voltage = body["battery_voltage"]
+        # device_status.battery_crate = body["battery_crate"]
+        # device_status.on_power = body["on_power"]
         device_status.save()
 
         data = {
