@@ -334,3 +334,4 @@ nextion/
 /db.sqlite3
 app/media/*
 /media/
+app/static/firmware/*.bin
