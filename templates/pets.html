@@ -68,6 +68,10 @@
             font-size: 2.3em;
         }
 
+        .inactive {
+            opacity: 35%;
+        }
+
     </style>
 {% endblock %}
 
@@ -145,9 +149,9 @@
                                         <div class="col-sm-6">
                                             <div class="card mb-2">
                                                 <div class="card-header">
-                                                    <span class="text-warning">{{ i.meal_name }}</span>
+                                                    <span class="text-warning">{{ i.meal_name }}</span>{% if not i.active_flag %} <span class="text-muted" style="float: right">Inactive</span>{% endif %}
                                                 </div>
-                                                <div class="card-body">
+                                                <div class="card-body{% if not i.active_flag %} inactive{% endif %}">
                                                     <div class="mb-2">
                                                         <div class="row p-2 my-auto" style="height: 90px;">
                                                             <div class="col-sm-6 d-flex box p-1">
