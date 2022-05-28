@@ -176,7 +176,7 @@ class EventQueue(models.Model):
 class DeviceStatus(models.Model):
     device = models.ForeignKey(Device, models.CASCADE)
     control_board_revision = models.CharField(max_length=5, null=True)
-    firmware_version = models.CharField(max_length=15, null=True)
+    firmware_version = models.CharField(max_length=15, null=True, default="factory")
     last_boot = models.DateTimeField(auto_now_add=True)
     last_ping = models.DateTimeField(auto_now_add=True)
     battery_voltage = models.FloatField(null=True, default=0.0)

@@ -558,40 +558,45 @@ def feeders(request):
     i = 0
 
     for device in devices:
-        device_status = DeviceStatus.objects.get(device_id=device.device_id)
+        try:
+            device_status = DeviceStatus.objects.get(device_id=device.device_id)
 
-        online = True
-        last_ping = uptime(device_status.last_ping)
-        if last_ping > 500:
-            online = False
+            online = True
+            last_ping = uptime(device_status.last_ping)
+            if last_ping > 500:
+                online = False
 
-        log.debug("Last ping: %d" % last_ping)
-        next_meal = get_next_feeding(device.device_id, user_settings["timezone"])
-        feedings = FeedingLog.objects.filter(device_owner__device_id=device.device_id).order_by("-feed_timestamp")[:5]
-        if device_status.battery_crate > 0:
-            crate_time = round(((100 - device_status.battery_soc) / device_status.battery_crate) * 3600)
-        elif device_status.battery_crate != 0:
-            crate_time = round((device_status.battery_soc / abs(device_status.battery_crate)) * 3600)
-        else:
-            crate_time = 0
+            log.debug("Last ping: %d" % last_ping)
+            next_meal = get_next_feeding(device.device_id, user_settings["timezone"])
+            feedings = FeedingLog.objects.filter(device_owner__device_id=device.device_id).order_by("-feed_timestamp")[
+                :5
+            ]
+            if device_status.battery_crate > 0:
+                crate_time = round(((100 - device_status.battery_soc) / device_status.battery_crate) * 3600)
+            elif device_status.battery_crate != 0:
+                crate_time = round((device_status.battery_soc / abs(device_status.battery_crate)) * 3600)
+            else:
+                crate_time = 0
 
-        firmware_update = (
-            FirmwareUpdate.objects.filter(control_board__revision=device_status.control_board_revision)
-            .order_by("-created_at")
-            .first()
-        )
-        log.info("firmware version: %s", firmware_update.version)
-        device_info.append(
-            {
-                "uptime": seconds_to_days(uptime(device_status.last_boot)),
-                "device": device,
-                "online": "Online" if online else "Offline",
-                "device_status": device_status,
-                "crate_time": str(datetime.timedelta(seconds=crate_time)),
-                "firmware_update": firmware_update,
-            }
-        )
-        i += 1
+            firmware_update = (
+                FirmwareUpdate.objects.filter(control_board__revision=device_status.control_board_revision)
+                .order_by("-created_at")
+                .first()
+            )
+
+            device_info.append(
+                {
+                    "uptime": seconds_to_days(uptime(device_status.last_boot)),
+                    "device": device,
+                    "online": "Online" if online else "Offline",
+                    "device_status": device_status,
+                    "crate_time": str(datetime.timedelta(seconds=crate_time)),
+                    "firmware_update": firmware_update,
+                }
+            )
+            i += 1
+        except ObjectDoesNotExist:
+            log.error("Unable to get DeviceStatus")
 
     data = {
         "title": "Registered Feeders",
