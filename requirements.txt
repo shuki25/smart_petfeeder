@@ -19,3 +19,4 @@ redis~=4.3.1
 requests~=2.27.1
 pytz~=2022.1
 mysqlclient~=2.1.0
+django-crispy-forms~=1.14.0

@@ -53,7 +53,7 @@
                         {% if device.feeder_model.image_path %}
                         <img id="device_image" class="feeder" src="{% static device.feeder_model.image_path %}" alt="Feeder">
                         {% else %}
-                        <img id="device_image" class="feeder" src="{% static 'placeholder.jpg' %}" alt="Feeder">
+                        <img id="device_image" class="feeder" src="{% static 'img/placeholder.jpg' %}" alt="Feeder">
                         {% endif %}
                     </div>
                 </div>
@@ -91,7 +91,7 @@
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text" id="inputGroup-sizing-md" style="width: 135px">Model</span>
                                 <select id="feeder_model" class="form-select form-select-sm" name="feeder_model_image_path" required>
-                                    <option value="placeholder.jpg">Not Selected</option>
+                                    <option value="img/placeholder.jpg">Not Selected</option>
                                     {% for row in feeder_models %}
                                         <option value="{{ row.image_path }}" {% if device.feeder_model.id == row.id %}selected{% endif %}>{{ row.brand_name }} - {{ row.model_name }}</option>
                                     {% endfor %}

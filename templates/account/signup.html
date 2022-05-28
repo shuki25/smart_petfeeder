@@ -1,21 +1,53 @@
-{% extends "base.html" %}
-
-{% load i18n %}
-
-{% block head_title %}{% trans "Signup" %}{% endblock %}
-
-{% block content %}
-<h1>{% trans "Sign Up" %}</h1>
-
-<p>{% blocktrans %}Already have an account? Then please <a href="{{ login_url }}">sign in</a>.{% endblocktrans %}</p>
-
-<form class="signup" id="signup_form" method="post" action="{% url 'account_signup' %}">
-  {% csrf_token %}
-  {{ form.as_p }}
-  {% if redirect_field_value %}
-  <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
-  {% endif %}
-  <button type="submit">{% trans "Sign Up" %} &raquo;</button>
-</form>
-
+{% extends 'account/base.html' %}
+{% load account socialaccount crispy_forms_filters %}
+{% block head_title %}Signup{% endblock %}
+{% block errors %}
+    {% if form.errors %}
+        <div class="row">
+            <div class="col-md-6 mx-auto">
+                <div class="alert alert-warning show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Please check the error below and
+                    try again.
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+{% block form_header %}
+    <h5 class="card-header text-warning">
+        <i class="fas fa-user-plus"></i><span class="p-2">Sign Up for a New Account</span>
+    </h5>
+{% endblock %}
+{% block form_body %}
+    <form method="post" action="{% url 'account_signup' %}">
+        {% csrf_token %}
+        <div>
+            <p>Already have an account? Then please <a href="{{ login_url }}">sign in</a>.</p>
+        </div>
+        {{ form|crispy }}
+        <div class="text-center">
+            <button class="btn btn-primary"><i class="fas fa-chevron-right me-2"></i>Sign Up</button>
+        </div>
+        <input type="hidden" name="next" value="{{ next }}">
+        {% if redirect_field_value %}
+            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+        {% endif %}
+    </form>
+{% endblock %}
+{% block form_footer %}
+<div class="card-footer">
+    <a href="{% url 'account_reset_password' %}">Lost password?</a>
+</div>
+{% endblock %}
+{% block js %}
+    <script>
+        $(() => {
+            $('#signup-btn').click(function (e) {
+                $('#sign-up').submit()
+            })
+            $('#google-signin-btn').click(function (e) {
+                $('#google-signin').submit()
+            })
+        })
+    </script>
 {% endblock %}

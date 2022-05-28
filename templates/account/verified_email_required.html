@@ -3,10 +3,10 @@
 {% load i18n %}
 
 {% block head_title %}{% trans "Verify Your E-mail Address" %}{% endblock %}
-
-{% block content %}
-<h1>{% trans "Verify Your E-mail Address" %}</h1>
-
+{% block form_header %}
+    <h4 class="card-header text-warning"><i class="fas fa-lock me-2"></i> {% trans "Verify Your E-mail Address" %}</h4>
+{% endblock %}
+{% block form_body %}
 {% url 'account_email' as email_url %}
 
 <p>{% blocktrans %}This part of the site requires us to verify that
@@ -18,6 +18,4 @@ verification. Please click on the link inside that e-mail. If you do not see the
 contact us if you do not receive it within a few minutes.{% endblocktrans %}</p>
 
 <p>{% blocktrans %}<strong>Note:</strong> you can still <a href="{{ email_url }}">change your e-mail address</a>.{% endblocktrans %}</p>
-
-
 {% endblock %}

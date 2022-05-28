@@ -88,10 +88,6 @@
 		</div>
 		<div class="col-md-4">
             {% if not user.is_authenticated %}
-            <form id="sign-up" method="POST" action="{% url 'account_signup' %}">
-                {% csrf_token %}
-                <input type="hidden" name="next" value="{{ next }}">
-            </form>
             <form id="google-signin" method="post" action="/accounts/google/login/">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ next }}">
@@ -113,7 +109,7 @@
                         </div>
                         <div class="text-center btn-group-sm">
                             <button class="btn btn-primary" type="submit"><i class="fas fa-sign-in-alt"></i> Sign In</button>
-                            <button id="signup-btn" type="button" class="btn btn-secondary"><i class="fas fa-user-plus"></i> Sign Up</button><br>
+                            <a id="signup-btn" type="button" class="btn btn-secondary" href="{% url 'account_signup' %}"><i class="fas fa-user-plus"></i> Sign Up</a><br>
                             <button id="google-signin-btn" type="button" class="btn btn-secondary mt-2"><i class="fab fa-google"></i> Login via Google</button>
                         </div>
                         <input type="hidden" name="next" value="{{ next }}">
@@ -130,10 +126,6 @@
 {% block js %}
     <script>
         $(() => {
-
-            $('#signup-btn').click(function (e) {
-                $('#sign-up').submit()
-            })
             $('#google-signin-btn').click(function (e) {
                 $('#google-signin').submit()
             })

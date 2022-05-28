@@ -52,6 +52,8 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",
     "markdownify.apps.MarkdownifyConfig",
     "django_celery_beat",
+    "crispy_forms",
+    "crispy_bootstrap5",
 ]
 
 MIDDLEWARE = [
@@ -130,11 +132,14 @@ AUTHENTICATION_BACKENDS = [
 
 ACCOUNT_ALLOW_REGISTRATION = True
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
-ACCOUNT_EMAIL_REQUIRED = False
-ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_PRESERVE_USERNAME_CASING = False
 ACCOUNT_SIGNUP_EMAIL_ENTER_TWICE = True
 ACCOUNT_SIGNUP_REDIRECT_URL = "/setup/"
+ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = ACCOUNT_SIGNUP_REDIRECT_URL
+ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
+
 
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
@@ -244,3 +249,16 @@ CELERY_TASK_TIME_LIMIT = 5 * 60
 CELERY_TASK_SOFT_TIME_LIMIT = 60
 # http://docs.celeryproject.org/en/latest/userguide/configuration.html#beat-scheduler
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+# Crispy Form Options
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+# E-Mail configurations to send email for account verification or forgotten password
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = SMTP_RELAY_HOST
+EMAIL_PORT = 587
+EMAIL_HOST_USER = SMTP_RELAY_USERNAME
+EMAIL_HOST_PASSWORD = SMTP_RELAY_PASSWORD
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = "no_reply@smartpetfeeder.net"
