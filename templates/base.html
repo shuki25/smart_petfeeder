@@ -1,4 +1,9 @@
 {% load static %}
+{% load gravatar %}
+{% load socialaccount %}
+{% if user.is_authenticated %}
+{% get_social_accounts user as accounts %}
+{% endif %}
 <!DOCTYPE html>
 <html lang="en" class="h-100">
 <head>
@@ -41,7 +46,7 @@
                                     <a class="nav-link {% if current_route == menu.route or current_route in menu.routes %} fw-bold text-warning active{% endif %}" href="{% url menu.route %}">{{ menu.item }}</a>
                                 </li>
                             {% elif menu.is_setup is None %}
-                                 <li class="nav-item">
+                                <li class="nav-item">
                                     <a class="nav-link {% if current_route == menu.route or current_route in menu.routes %} fw-bold text-warning active{% endif %}" href="{% url menu.route %}">{{ menu.item }}</a>
                                 </li>
                             {% endif %}
@@ -49,45 +54,36 @@
                     {% endfor %}
                 </ul>
                 {% if user.is_authenticated %}
-                    {#                    <span class="navbar-text">{{ user.username }}</span>#}
-                    <span class="nav-item dropdown">
-                        <a class="nav-link" data-bs-toggle="dropdown" href="#">
-                            <i class="far fa-bell"></i>
-                            <span class="badge bg-danger">15</span>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                            <span class="dropdown-header">15 Notifications</span>
-                            <div class="dropdown-divider"></div>
-                            <a href="#" class="dropdown-item">
-                                <i class="fas fa-envelope mr-2"></i> 4 new messages
-                                <span class="float-right text-muted text-sm">3 mins</span>
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a href="#" class="dropdown-item">
-                                <i class="fas fa-users mr-2"></i> 8 friend requests
-                                <span class="float-right text-muted text-sm">12 hours</span>
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a href="#" class="dropdown-item">
-                                <i class="fas fa-file mr-2"></i> 3 new reports
-                                <span class="float-right text-muted text-sm">2 days</span>
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a href="#" class="dropdown-item dropdown-footer">See All Notifications</a>
+                    <div class="navbar-nav dropdown text-end">
+                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDarkDropdown" aria-controls="navbarNavDarkDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+                        <div class="collapse navbar-collapse" id="navbarNavDarkDropdown">
+                            <ul class="navbar-nav">
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <img src="{{ user.email|gravatar_url:'32' }}" alt="Avatar" class="rounded-circle me-2" width="32" height="32"> {{ user.username }}
+                                    </a>
+                                    <ul class="dropdown-menu" aria-labelledby="navbarDarkDropdownMenuLink">
+                                        <li><a class="dropdown-item" href="/accounts/social/connections/">Link to
+                                            Google</a></li>
+                                        <li><a class="dropdown-item" href="#">Notifications</a></li>
+                                        <li><a class="dropdown-item" href="{% url 'account_email' %}">Linked Emails</a></li>
+                                        {% if not accounts %}
+                                            <li><a class="dropdown-item" href="{% url 'account_change_password' %}">Change Password</a></li>
+                                        {% endif %}
+                                        <li>
+                                            <hr class="dropdown-divider">
+                                        </li>
+                                        <li><a class="dropdown-item" href="{% url 'account_logout' %}">Sign out</a></li>
+                                    </ul>
+                                </li>
+                            </ul>
                         </div>
-                    </span>
-                    <span class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            {{ user.username }}
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown" style="margin-right:100px;">
-                            <li><a class="dropdown-item" href="#">My Account</a></li>
-                            <li><a class="dropdown-item" href="{% url 'account_change_password' %}">Change Password</a></li>
-                        </ul>
-                    </span>
+                    </div>
                     <form method="post" action="{% url 'account_logout' %}">
                         {% csrf_token %}
-                        <button type="submit" class="btn nav-link"><i class="fas fa-sign-out-alt"></i></button>
+                        <button type="submit" class="btn text-muted"><i class="fas fa-sign-out-alt"></i></button>
                     </form>
                     {#                    <a class="nav-link" href="{% url 'account_logout' %}?next=/"><i class="fas fa-sign-out-alt"></i></a>#}
 
