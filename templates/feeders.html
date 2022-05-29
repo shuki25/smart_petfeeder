@@ -106,29 +106,34 @@
                                 </div>
                             </div>
                             {% if device.device_status.firmware_version != device.firmware_update.version and device.firmware_update.version != '' %}
-                            <form id="upgrade_firmware" method="post" action="{% url 'upgrade-firmware' %}">
-                                {% csrf_token %}
-                                <input id="device_owner_id" type="hidden" name="device_owner_id" value="">
-                            </form>
-                            <div class="row mt-2">
-                                <div class="col-md-6">
-                                    <h4 class="text-warning"><i class="fas fa-exclamation-circle me-1"></i> Firmware Update Available</h4>
+                                <form id="upgrade_firmware" method="post" action="{% url 'upgrade-firmware' %}">
+                                    {% csrf_token %}
+                                    <input id="device_owner_id" type="hidden" name="device_owner_id" value="">
+                                </form>
+                                <div class="row mt-2">
+                                    <div class="col-md-6">
+                                        <h4 class="text-warning"><i class="fas fa-exclamation-circle me-1"></i> Firmware
+                                            Update Available</h4>
+                                    </div>
+                                    <div class="col-md-6">
+                                        {% if device.online == "Online" %}
+                                            <span style="float: left">
+                                                <button data-device-id="{{ device.device.id }}" class="upgrade_btn delete_btn btn btn-primary btn-sm"><i class="fas fa-cloud-upload-alt"></i> Upgrade Firmware</button>
+                                            </span>
+                                        {% else %}
+                                                <button data-device-id="{{ device.device.id }}" class="upgrade_btn delete_btn btn btn-primary btn-sm me-2" disabled><i class="fas fa-cloud-upload-alt"></i> Upgrade Firmware</button><span class="text-muted">Upgrade when it's back online.</span>
+                                        {% endif %}
+                                    </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <span style="float: left">
-                                        <button data-device-id="{{ device.device.id }}" class="upgrade_btn delete_btn btn btn-primary btn-sm"><i class="fas fa-cloud-upload-alt"></i> Upgrade Firmware</button>
-                                    </span>
+                                <div class="row mt-2">
+                                    <div class="col-md-6">
+                                        <span>Your current firmware ({{ device.device_status.firmware_version }}) is currently outdated. The new firmware ({{ device.firmware_update.version }}) is available for update. Highly recommended to upgrade your feeder control board.</span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <span class="text-warning">What's new in this upgrade:</span><br>
+                                        <span>{{ device.firmware_update.description|markdownify }}</span>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="row mt-2">
-                                <div class="col-md-6">
-                                    <span>Your current firmware ({{ device.device_status.firmware_version }}) is currently outdated. The new firmware ({{ device.firmware_update.version }}) is available for update. Highly recommended to upgrade your feeder control board.</span>
-                                </div>
-                                <div class="col-md-6">
-                                    <span class="text-warning">What's new in this upgrade:</span><br>
-                                    <span>{{ device.firmware_update.description|markdownify }}</span>
-                                </div>
-                            </div>
                             {% endif %}
                             <div class="row mt-2">
                                 <h5 class="text-primary">Back-up Power</h5>
@@ -194,10 +199,10 @@
                 return false;
             });
             $('.upgrade_btn').click(function (e) {
-               let id = $(this).data("device-id");
-               $(this).html('<i class="fas fa-spinner fa-spin me-1"></i> Upgrading...');
-               $('#device_owner_id').val(id);
-               $('#upgrade_firmware').submit()
+                let id = $(this).data("device-id");
+                $(this).html('<i class="fas fa-spinner fa-spin me-1"></i> Upgrading...');
+                $('#device_owner_id').val(id);
+                $('#upgrade_firmware').submit()
             });
 
         })
