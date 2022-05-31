@@ -115,13 +115,15 @@
                                         <h4 class="text-warning"><i class="fas fa-exclamation-circle me-1"></i> Firmware
                                             Update Available</h4>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-6 my-auto">
                                         {% if device.online == "Online" %}
                                             <span style="float: left">
                                                 <button data-device-id="{{ device.device.id }}" class="upgrade_btn delete_btn btn btn-primary btn-sm"><i class="fas fa-cloud-upload-alt"></i> Upgrade Firmware</button>
                                             </span>
                                         {% else %}
-                                                <button data-device-id="{{ device.device.id }}" class="upgrade_btn delete_btn btn btn-primary btn-sm me-2" disabled><i class="fas fa-cloud-upload-alt"></i> Upgrade Firmware</button><span class="text-muted">Upgrade when it's back online.</span>
+                                            <div class="text-danger">
+                                                <i class="fas fa-exclamation-circle me-2"></i>Upgrade when the feeder is back online.
+                                            </div>
                                         {% endif %}
                                     </div>
                                 </div>
