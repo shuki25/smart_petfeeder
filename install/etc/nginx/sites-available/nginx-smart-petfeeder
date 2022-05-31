@@ -5,6 +5,9 @@ server {
     location /static/ {
         root /home/django/smart_petfeeder;
     }
+    location /media/ {
+        root /home/django/smart_petfeeder/media;
+    }
 
     location / {
         include proxy_params;
