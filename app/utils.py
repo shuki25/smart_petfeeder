@@ -229,3 +229,14 @@ def resize_and_crop(img_path, modified_path, size, crop_type="top"):
         img = img.resize((size[0], size[1]), Image.ANTIALIAS)
     # If the scale is the same, we do not need to crop
     img.save(modified_path)
+
+
+def battery_time(battery_soc, battery_crate):
+    if battery_crate > 0:
+        crate_time = round(((100 - battery_soc) / battery_crate) * 3600)
+    elif battery_crate != 0:
+        crate_time = round((battery_soc / abs(battery_crate)) * 3600)
+    else:
+        crate_time = 0
+
+    return crate_time
