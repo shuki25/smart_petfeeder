@@ -335,3 +335,4 @@ nextion/
 app/media/*
 /media/
 app/static/firmware/*.bin
+/certificates/
