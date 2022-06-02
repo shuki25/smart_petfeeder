@@ -6,7 +6,7 @@ server {
         root /home/django/smart_petfeeder;
     }
     location /media/ {
-        root /home/django/smart_petfeeder/media;
+        root /home/django/smart_petfeeder;
     }
 
     location / {
