@@ -185,6 +185,7 @@ class DeviceStatus(models.Model):
     hopper_level = models.FloatField(null=True, default=0.0)
     has_event = models.BooleanField(default=False)
     on_power = models.BooleanField(default=True)
+    is_hopper_low = models.BooleanField(default=False)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -272,7 +273,14 @@ class FirmwareUpdate(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
-# Automatically add event to event queue by triggering post_save signal
+class NotificationAlertTracking(models.Model):
+    device_owner = models.ForeignKey(DeviceOwner, models.CASCADE)
+    offline_alert = models.BooleanField(default=False)
+    low_hopper_alert = models.BooleanField(default=False)
+    power_disconnect_alert = models.BooleanField(default=False)
+    low_battery_alert = models.BooleanField(default=False)
+
+
 # Automatically generate auth token by catching user's post_save signal
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_auth_token(sender, instance=None, created=False, **kwargs):
@@ -281,6 +289,7 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
         Settings.objects.create(user=instance, name="is_setup_done", value="0")
 
 
+# Automatically add event to event queue by triggering post_save signal
 @receiver(post_save, sender=FeedingSchedule)
 def add_event_queue_feeding_schedule_save(sender, instance=None, created=False, **kwargs):
     # eq = EventQueue.objects.filter(device_owner_id=instance.device_owner_id, event_code=300, status_code="P")
@@ -292,15 +301,17 @@ def add_event_queue_feeding_schedule_save(sender, instance=None, created=False, 
     status.save()
 
 
-@receiver(post_delete, sender=FeedingSchedule)
-def add_event_queue_feeding_schedule_delete(sender, instance=None, created=False, **kwargs):
-    # eq = EventQueue.objects.filter(device_owner_id=instance.device_owner_id, event_code=300, status_code="P")
-    # if not len(eq):
-    log.info("in add_event_queue_feeding_schedule_delete")
-    EventQueue.objects.get_or_create(device_owner_id=instance.device_owner_id, event_code=300, status_code="P")
-    status, is_created = DeviceStatus.objects.get_or_create(device_id=instance.device_id)
-    status.has_event = True
-    status.save()
+# Cannot use this, it will cause problems when trying to remove a feeder (cyclic insertion, fk error)
+#
+# @receiver(post_delete, sender=FeedingSchedule)
+# def add_event_queue_feeding_schedule_delete(sender, instance=None, **kwargs):
+#     # eq = EventQueue.objects.filter(device_owner_id=instance.device_owner_id, event_code=300, status_code="P")
+#     # if not len(eq):
+#     log.info("in add_event_queue_feeding_schedule_delete")
+#     EventQueue.objects.get_or_create(device_owner_id=instance.device_owner_id, event_code=300, status_code="P")
+#     status, is_created = DeviceStatus.objects.get_or_create(device_id=instance.device_id)
+#     status.has_event = True
+#     status.save()
 
 
 @receiver(post_save, sender=Settings)
@@ -317,6 +328,8 @@ def add_event_queue2(sender, instance=None, created=False, **kwargs):
 def add_event_queue3(sender, instance=None, created=False, **kwargs):
     EventQueue.objects.get_or_create(device_owner_id=instance.id, event_code=400, status_code="P")
     status, is_created = DeviceStatus.objects.get_or_create(device_id=instance.device_id)
+    if is_created:
+        NotificationAlertTracking.objects.create(device_owner_id=instance.id)
     status.has_event = True
     status.save()
 
@@ -326,6 +339,12 @@ def add_event_queue4(sender, instance=None, created=False, **kwargs):
     try:
         device = DeviceOwner.objects.get(id=instance.device_owner_id)
         user_settings = NotificationSettings.objects.filter(user_id=device.user_id).first()
+        device_status = DeviceStatus.objects.get(device_id=device.device_id)
+        capacity = device.feeder_model.hopper_capacity
+        amount = (device_status.hopper_level * capacity) / 100
+        new_amount = amount - instance.feed_amt
+        device_status.hopper_level = (new_amount / capacity) * 100
+        device_status.save()
         if user_settings.pushover_user_key != "":
             if instance.feed_type == "R" and user_settings.manual_food:
                 message = "%s cup was manually dispensed from a remote computer or mobile device." % (
