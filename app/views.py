@@ -42,6 +42,7 @@ from .models import (
 )
 from .pushover.client import Pushover
 from .utils import (
+    battery_time,
     generate_device_key,
     get_next_feeding,
     resize_and_crop,
@@ -92,12 +93,7 @@ def dashboard(request):
         next_meal = get_next_feeding(device.device_id, user_settings["timezone"])
         feedings = FeedingLog.objects.filter(device_owner__device_id=device.device_id).order_by("-feed_timestamp")[:5]
 
-        if device_status.battery_crate > 0:
-            crate_time = round(((100 - device_status.battery_soc) / device_status.battery_crate) * 3600)
-        elif device_status.battery_crate != 0:
-            crate_time = round((device_status.battery_soc / abs(device_status.battery_crate)) * 3600)
-        else:
-            crate_time = 0
+        crate_time = battery_time(device_status.battery_soc, device_status.battery_crate)
 
         device_info.append(
             {
@@ -571,12 +567,8 @@ def feeders(request):
             feedings = FeedingLog.objects.filter(device_owner__device_id=device.device_id).order_by("-feed_timestamp")[
                 :5
             ]
-            if device_status.battery_crate > 0:
-                crate_time = round(((100 - device_status.battery_soc) / device_status.battery_crate) * 3600)
-            elif device_status.battery_crate != 0:
-                crate_time = round((device_status.battery_soc / abs(device_status.battery_crate)) * 3600)
-            else:
-                crate_time = 0
+
+            crate_time = battery_time(device_status.battery_soc, device_status.battery_crate)
 
             firmware_update = (
                 FirmwareUpdate.objects.filter(control_board__revision=device_status.control_board_revision)
@@ -604,6 +596,7 @@ def feeders(request):
         "timezone": timezone,
         "info": sorted(device_info, key=lambda z: z["online"], reverse=True),
         "num_feeders": len(device_info),
+        "upgrade_active": request.GET.get("upgrade_active", False),
     }
     return render(request, "feeders.html", context=data)
 
@@ -615,6 +608,7 @@ def edit_feeder(request, device_owner_id):
 
     try:
         device_owner = DeviceOwner.objects.get(id=device_owner_id, user_id=request.user.id)
+        device_status = DeviceStatus.objects.get(device_id=device_owner.device_id)
     except ObjectDoesNotExist:
         messages.error(request, "Device is not found in the database.")
         return HttpResponseRedirect("/feeders/")
@@ -626,7 +620,9 @@ def edit_feeder(request, device_owner_id):
         device_owner.feeder_model_id = feeder_model_id
         device_owner.manual_motor_timing_id = request.POST["manual_motor_timing_id"]
         device_owner.manual_button = True if "manual_button" in request.POST else False
+        device_status.hopper_level = request.POST.get("hopper_level", 0)
         device_owner.save()
+        device_status.save()
         messages.success(request, "Settings have been saved.")
         return HttpResponseRedirect("/feeders/")
 
@@ -635,6 +631,8 @@ def edit_feeder(request, device_owner_id):
         "device": device_owner,
         "feeder_models": feeder_models,
         "motor_timings": motor_timings,
+        "device_status": device_status,
+        "hopper_amount": "%.1f" % ((device_owner.feeder_model.hopper_capacity * device_status.hopper_level) / 100),
     }
     return render(request, "edit_feeder.html", context=data)
 
@@ -721,8 +719,8 @@ def remove_feeder(request):
         token = request.POST.get("token")
         if token == xss_token("remove_feeder", device_owner_id):
             try:
-                device_owner_id = DeviceOwner.objects.get(id=device_owner_id, user_id=request.user.id)
-                device_owner_id.delete()
+                device_owner = DeviceOwner.objects.get(id=device_owner_id, user_id=request.user.id)
+                device_owner.delete()
                 messages.success(request, "Feeder successfully removed.")
 
             except ObjectDoesNotExist:

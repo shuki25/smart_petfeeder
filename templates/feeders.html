@@ -118,7 +118,11 @@
                                     <div class="col-md-6 my-auto">
                                         {% if device.online == "Online" %}
                                             <span style="float: left">
+                                            {% if upgrade_active %}
+                                                <button data-device-id="{{ device.device.id }}" class="upgrade_btn delete_btn btn btn-primary btn-sm" disabled><i class="fas fa-spinner fa-spin me-1"></i> Upgrading...</button>
+                                            {% else %}
                                                 <button data-device-id="{{ device.device.id }}" class="upgrade_btn delete_btn btn btn-primary btn-sm"><i class="fas fa-cloud-upload-alt"></i> Upgrade Firmware</button>
+                                            {% endif %}
                                             </span>
                                         {% else %}
                                             <div class="text-danger">
@@ -206,7 +210,13 @@
                 $('#device_owner_id').val(id);
                 $('#upgrade_firmware').submit()
             });
-
+            {% if upgrade_active %}
+            $(window).on('load', function (e) {
+                setTimeout(function () {
+                    window.location.replace(location.protocol + '//' + location.host + location.pathname);
+                },75000);
+            });
+            {% endif %}
         })
     </script>
 {% endblock %}

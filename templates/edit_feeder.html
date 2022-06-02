@@ -18,15 +18,15 @@
     {% if not is_setup_done %}
         {% include 'setup_banner.html' %}
     {% else %}
-    <div class="row mb-2">
-        <div class="col-md-6">
-            {% if current_route == "activate-feeder" %}
-            <h2>Activating a Feeder</h2>
-            {% else %}
-                <h2> Registered Feeder</h2>
-            {% endif %}
+        <div class="row mb-2">
+            <div class="col-md-6">
+                {% if current_route == "activate-feeder" %}
+                    <h2>Activating a Feeder</h2>
+                {% else %}
+                    <h2> Registered Feeder</h2>
+                {% endif %}
+            </div>
         </div>
-    </div>
     {% endif %}
     <div class="card mb-2">
         <div class="card-header align-items-center">
@@ -37,9 +37,9 @@
                 <div class="col-md-4 my-auto">
                     <span style="float: right">
                         {% if current_route == 'activate-feeder' %}
-                        <button class="btn btn-primary btn-sm" id="save_btn" disabled><i id="save_icon" class="fas fa-bolt"></i> Activate</button>
+                            <button class="btn btn-primary btn-sm" id="save_btn" disabled><i id="save_icon" class="fas fa-bolt"></i> Activate</button>
                         {% else %}
-                        <button class="btn btn-primary btn-sm" id="save_btn"><i id="save_icon" class="fas fa-save"></i> Save</button>
+                            <button class="btn btn-primary btn-sm" id="save_btn"><i id="save_icon" class="fas fa-save"></i> Save</button>
                         {% endif %}
                         <button class="btn btn-secondary btn-sm" id="cancel_btn"><i class="fas fa-times"></i> Cancel</button>
                     </span>
@@ -51,9 +51,9 @@
                 <div class="col-md-4 my-auto">
                     <div class="d-flex justify-content-center">
                         {% if device.feeder_model.image_path %}
-                        <img id="device_image" class="feeder" src="{% static device.feeder_model.image_path %}" alt="Feeder">
+                            <img id="device_image" class="feeder" src="{% static device.feeder_model.image_path %}" alt="Feeder">
                         {% else %}
-                        <img id="device_image" class="feeder" src="{% static 'img/placeholder.jpg' %}" alt="Feeder">
+                            <img id="device_image" class="feeder" src="{% static 'img/placeholder.jpg' %}" alt="Feeder">
                         {% endif %}
                     </div>
                 </div>
@@ -63,55 +63,79 @@
                             {% csrf_token %}
                             <h3 class="text-primary">Feeder / Control Board</h3>
                             {% if current_route == "activate-feeder" %}
-                            <input type="hidden" name="activate" value="1">
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text" id="inputGroup-sizing-md" style="width: 135px">Device ID</span>
-                                <input id="device_id" type="text" class="form-control" name="device_id" value="{{ device_id }}" maxlength="19" required />
-                                <div class="input-group-append">
-                                    <button id="clear_button" class="btn btn-secondary btn-sm" type="button"><i class="far fa-times-circle"></i> </button>
-                                </div>
-                                <button type="button" class="btn btn-primary ms-2" id="verify_btn" disabled><i id="verify_icon" class="fas fa-user-check"></i> Validate</button>
-                            </div>
-                                <label for="device_id" class="form-text mb-3">Enter the Device Identifier provided with the control board. <span class="fw-bold">Validate before you activate the device.</span></label>
+                                <input type="hidden" name="activate" value="1">
                                 <div class="input-group input-group-sm">
-                                <span class="input-group-text" id="inputGroup-sizing-md" style="width: 135px">Activation Code</span>
-                                <input id="activation_code" type="text" class="form-control" name="activation_code" value="{{ device_key }}" required />
-                            </div>
-                            <label for="activation_code" class="form-text mb-3">Enter the Activation Code provided with the control board.</label>
+                                    <span class="input-group-text" id="inputGroup-sizing-md" style="width: 135px">Device ID</span>
+                                    <input id="device_id" type="text" class="form-control" name="device_id" value="{{ device_id }}" maxlength="19" required/>
+                                    <div class="input-group-append">
+                                        <button id="clear_button" class="btn btn-secondary btn-sm" type="button">
+                                            <i class="far fa-times-circle"></i></button>
+                                    </div>
+                                    <button type="button" class="btn btn-primary ms-2" id="verify_btn" disabled>
+                                        <i id="verify_icon" class="fas fa-user-check"></i> Validate
+                                    </button>
+                                </div>
+                                <label for="device_id" class="form-text mb-3">Enter the Device Identifier provided with
+                                    the control board.
+                                    <span class="fw-bold">Validate before you activate the device.</span></label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text" id="inputGroup-sizing-md" style="width: 135px">Activation Code</span>
+                                    <input id="activation_code" type="text" class="form-control" name="activation_code" value="{{ device_key }}" required/>
+                                </div>
+                                <label for="activation_code" class="form-text mb-3">Enter the Activation Code provided
+                                    with the control board.</label>
                             {% else %}
-                            <div class="mb-3">
-                                <span class="text-warning mb-2">Device ID:</span> {{ device.device.control_board_identifier }} <span class="form-text ms-2"><i class="fas fa-check-circle text-success"></i> Activated</span>
-                            </div>
+                                <div class="mb-3">
+                                    <span class="text-warning mb-2">Device ID:</span> {{ device.device.control_board_identifier }}
+                                    <span class="form-text ms-2"><i class="fas fa-check-circle text-success"></i> Activated</span>
+                                </div>
                             {% endif %}
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text" id="inputGroup-sizing-md" style="width: 135px">Feeder Title</span>
                                 <input id="feeder_name" type="text" class="form-control" name="name" value="{{ device.name }}" required>
                             </div>
-                            <label for="feeder_name" class="form-text mb-3">Provide a title for the feeder to help you identify the feeder (e.g. multiple feeders).</label>
+                            <label for="feeder_name" class="form-text mb-3">Provide a title for the feeder to help you
+                                identify the feeder (e.g. multiple feeders).</label>
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text" id="inputGroup-sizing-md" style="width: 135px">Model</span>
                                 <select id="feeder_model" class="form-select form-select-sm" name="feeder_model_image_path" required>
                                     <option value="img/placeholder.jpg">Not Selected</option>
                                     {% for row in feeder_models %}
-                                        <option value="{{ row.image_path }}" {% if device.feeder_model.id == row.id %}selected{% endif %}>{{ row.brand_name }} - {{ row.model_name }}</option>
+                                        <option data-hopper-capacity="{{ row.hopper_capacity }}" value="{{ row.image_path }}" {% if device.feeder_model.id == row.id %}selected{% endif %}>{{ row.brand_name }}
+                                            - {{ row.model_name }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
-                            <label for="feeder_model" class="form-text mb-3">Select the feeder that has the Smart PetFeeder control board installed.</label>
+                            <label for="feeder_model" class="form-text mb-3">Select the feeder that has the Smart
+                                PetFeeder control board installed.</label>
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text" id="inputGroup-sizing-md" style="width: 135px">Portion Size</span>
                                 <select id="manual_feed" class="form-select form-select-sm" name="manual_motor_timing_id">
                                     <option value="">Select Portion Size</option>
                                     {% for row in motor_timings %}
                                         <option value="{{ row.id }}" {% if device.manual_motor_timing.id == row.id %}selected{% endif %}>
-                                            {% display_fraction row.feed_amount %} cup</option>
+                                            {% display_fraction row.feed_amount %} cup
+                                        </option>
                                     {% endfor %}
                                 </select>
                             </div>
-                            <label for="manual_feed" class="form-text mb-3">Select the amount of food to dispense when pressing a manual feed button on the feeder.</label>
+                            <label for="manual_feed" class="form-text mb-3">Select the amount of food to dispense when
+                                pressing a manual feed button on the feeder.</label>
+                            <div class="input-group input-group-sm">
+                                <div class="w-100">
+                                    <div style="float: right">
+                                        <span class="text-muted" id="amount_food"></span><span class="text-muted"> cups</span>
+                                    </div>
+                                    <span class="form-label">Hopper Level</span>
+                                </div>
+                                <input type="range" class="form-range" id="hopper_level" name="hopper_level" step="0.1" min="0" max="100" value="{{ device_status.hopper_level }}">
+                            </div>
+                            <label for="manual_feed" class="form-text mb-3">Indicate the amount of food is currently in
+                                the hopper.</label>
                             <div class="form-check form-switch">
-                                  <input class="form-check-input" type="checkbox" name="manual_button" value="1" role="switch" id="manual_feed_button" {% if device.manual_button %}checked{% endif %}>
-                                  <label class="form-check-label text-muted" for="manual_feed_button">Enable Manual Feed Button</label>
+                                <input class="form-check-input" type="checkbox" name="manual_button" value="1" role="switch" id="manual_feed_button" {% if device.manual_button %}checked{% endif %}>
+                                <label class="form-check-label text-muted" for="manual_feed_button">Enable Manual Feed
+                                    Button</label>
                             </div>
                         </form>
                     </div>
@@ -125,6 +149,15 @@
         let verify_complete = false;
         let verify_btn_update = false;
         $(() => {
+            $('#hopper_level').on('input', function (e) {
+                let capacity = $('#feeder_model').find(':selected').data('hopper-capacity');
+                let amt = (capacity * $(this).val()) / 100;
+                if (capacity) {
+                    $('#amount_food').html(amt.toFixed(1));
+                } else {
+                    $('#amount_food').html("?");
+                }
+            });
             $('#save_btn').click(function (e) {
                 $('#save_icon').removeClass('fa-save');
                 $('#save_icon').addClass('fas fa-sync-alt').addClass('fa-spin');
@@ -137,66 +170,68 @@
             $('#feeder_model').change(function (e) {
                 let img_path = "/static/" + $('#feeder_model').find(":selected").val()
                 $('#device_image').attr("src", img_path);
+                $('#hopper_level').trigger('input');
             });
-
-        })
+            $(window).on('load', function (e) {
+                $('#hopper_level').trigger('input');
+            });
+        });
         {% if current_route == "activate-feeder" %}
             $('#clear_button').click(function (e) {
                 $('#device_id').val("").focus().keyup();
 
             });
-        $('#device_id').on("keyup", function (e) {
-            if (verify_btn_update && verify_complete) {
-                $('#verify_btn').html('<i id="verify_icon" class="fas fa-user-check"></i> Validate');
-                $('#verify_btn').removeClass('btn-success').addClass('btn-primary');
-                $('#device_list').html('<option>Not Selected</option>');
-                $('#registered_devices').hide()
-                verify_btn_update = false;
-                verify_complete = false;
-            }
+            $('#device_id').on("keyup", function () {
+                if (verify_btn_update && verify_complete) {
+                    $('#verify_btn').html('<i id="verify_icon" class="fas fa-user-check"></i> Validate');
+                    $('#verify_btn').removeClass('btn-success').addClass('btn-primary');
+                    $('#device_list').html('<option>Not Selected</option>');
+                    $('#registered_devices').hide()
+                    verify_btn_update = false;
+                    verify_complete = false;
+                }
 
+                if ($('#device_id').val().length >= 19) {
+                    $('#verify_btn').prop("disabled", false);
+                } else {
+                    $('#verify_btn').prop("disabled", true);
+                }
+            });
+            $('#verify_btn').click(function (e) {
+                let device_id = $('#device_id').val();
+                if (device_id != "" && device_id.length >= 19) {
+                    $('#verify_icon').removeClass('fa-user-check').addClass('fa-sync-alt').addClass('fa-spin');
+                    let url = "/feeders/validate/" + $('#device_id').val() + "/";
+                    $.get(url, function (data, status) {
+                        if (data.status == 0) {
+                            if (data.already_owned) {
+                                toastr.error('This device is already registered to you. Please enter a different device identifier.');
+                            } else if (data.already_registered) {
+                                toastr.error('This device is already registered to someone else. The previous owner would need to deactivate their registration first. Please enter a different device identifier.');
+                            } else {
+                                toastr.error('Invalid control board identifier number. Please check and re-enter the number.');
+                            }
+                            $('#device_id').val("");
+                            $('#verify_btn').prop("disabled", true);
+                            $('#verify_icon').removeClass('fa-sync-alt').removeClass('fa-spin').addClass('fa-user-check');
+                            $('#device_list').html('<option>Not Selected</option>');
+                        } else {
+                            $('#verify_btn').removeClass('btn-primary').addClass('btn-success');
+                            $('#verify_btn').html('<i class="fas fa-check"></i> Validated');
+                            $('#verify_btn').prop("disabled", true);
+                            $('#save_btn').prop("disabled", false);
+                            verify_complete = true;
+                            verify_btn_update = true;
+                        }
+                    });
+                }
+            });
             if ($('#device_id').val().length >= 19) {
                 $('#verify_btn').prop("disabled", false);
             } else {
                 $('#verify_btn').prop("disabled", true);
             }
-        });
-        $('#verify_btn').click(function (e) {
-            let device_id = $('#device_id').val();
-            if(device_id != "" && device_id.length >= 19) {
-                $('#verify_icon').removeClass('fa-user-check').addClass('fa-sync-alt').addClass('fa-spin');
-                let url = "/feeders/validate/" + $('#device_id').val() + "/";
-                $.get(url, function (data, status) {
-                    if(data.status == 0) {
-                        if(data.already_owned) {
-                            toastr.error('This device is already registered to you. Please enter a different device identifier.');
-                        }
-                        else if(data.already_registered) {
-                            toastr.error('This device is already registered to someone else. The previous owner would need to deactivate their registration first. Please enter a different device identifier.');
-                        }
-                        else {
-                            toastr.error('Invalid control board identifier number. Please check and re-enter the number.');
-                        }
-                        $('#device_id').val("");
-                        $('#verify_btn').prop("disabled", true);
-                        $('#verify_icon').removeClass('fa-sync-alt').removeClass('fa-spin').addClass('fa-user-check');
-                        $('#device_list').html('<option>Not Selected</option>');
-                    } else {
-                        $('#verify_btn').removeClass('btn-primary').addClass('btn-success');
-                        $('#verify_btn').html('<i class="fas fa-check"></i> Validated');
-                        $('#verify_btn').prop("disabled", true);
-                        $('#save_btn').prop("disabled", false);
-                        verify_complete = true;
-                        verify_btn_update = true;
-                    }
-                });
-            }
-        });
-        if ($('#device_id').val().length >= 19) {
-            $('#verify_btn').prop("disabled", false);
-        } else {
-            $('#verify_btn').prop("disabled", true);
-        }
+
         {% endif %}
     </script>
 {% endblock %}
