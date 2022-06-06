@@ -16,6 +16,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect, render
 from django.template.defaultfilters import filesizeformat
+from django.utils import timezone
 from PIL import Image
 
 from app.tasks import send_pushover_notification
@@ -25,6 +26,7 @@ from .models import (
     AnimalSize,
     AnimalType,
     Article,
+    Carousel,
     Device,
     DeviceOwner,
     DeviceStatus,
@@ -60,9 +62,16 @@ media_root = settings.MEDIA_ROOT
 # Create your views here.
 def index(request):
     articles = Article.objects.filter(is_visible=True)
+    carousels = Carousel.objects.filter(
+        is_visible=True,
+        is_active=True,
+        start_datetime__lte=timezone.now(),
+        end_datetime__gte=timezone.now(),
+    ).order_by("start_datetime")
     data = {
         "title": "Smart PetFeeder Home Page",
         "articles": articles,
+        "carousels": carousels,
     }
     return render(request, "index.html", context=data)
 
@@ -135,9 +144,11 @@ def manual_feed(request, device_owner_id):
         return HttpResponseRedirect("/")
 
     try:
-        motor_timing = MotorTiming.objects.get(feed_amount=0.25)
+        motor_timing = MotorTiming.objects.get(id=device_owner.manual_motor_timing_id)
         ticks = motor_timing.interrupter_count
+        feed_amt = motor_timing.feed_amount
     except ObjectDoesNotExist:
+        feed_amt = 0.25
         ticks = 7
 
     try:
@@ -148,7 +159,7 @@ def manual_feed(request, device_owner_id):
         messages.error(request, "Internal error. Manual feed cancelled.")
         return HttpResponseRedirect("/")
 
-    payload = {"feed_amt": 0.25, "ticks": ticks}
+    payload = {"feed_amt": feed_amt, "ticks": ticks}
     event = EventQueue(
         device_owner_id=device_owner_id,
         event_code=100,
@@ -161,7 +172,6 @@ def manual_feed(request, device_owner_id):
             request,
             "Manual feed request sent to feeder. Please allow 5-10 seconds for the feeder to dispense the food.",
         )
-        sleep(3)
     else:
         messages.error("Internal error. Manual feed cancelled")
 
@@ -621,8 +631,8 @@ def edit_feeder(request, device_owner_id):
         device_owner.manual_motor_timing_id = request.POST["manual_motor_timing_id"]
         device_owner.manual_button = True if "manual_button" in request.POST else False
         device_status.hopper_level = request.POST.get("hopper_level", 0)
+        device_status.save(update_fields=["hopper_level"])
         device_owner.save()
-        device_status.save()
         messages.success(request, "Settings have been saved.")
         return HttpResponseRedirect("/feeders/")
 
@@ -917,3 +927,8 @@ def upgrade_firmware(request):
 @login_required
 def help_page(request):
     return render(request, "placeholder.html", context={"title": "Help"})
+
+
+@login_required
+def feeder_calibration(request):
+    return render(request, "placeholder.html", context={"title": "Calibrating Your Feeder"})
