@@ -322,6 +322,20 @@ def heartbeat(request):
                     device_owner__device_id=device_id
                 )
             )
+
+            if notification_settings.feeder_offline:
+                with transaction.atomic():
+                    for alert in alert_tracking:
+                        if alert.offline_alert:
+                            alert.offline_alert = False
+                            MessageQueue(
+                                device_owner_id=alert.device_owner_id,
+                                user_id=request.user.id,
+                                title=alert.device_owner.name,
+                                message="Your feeder is back online.",
+                            ).save()
+                            alert.save()
+
             if notification_settings.power_disconnected and not device_status.on_power:
                 with transaction.atomic():
                     for alert in alert_tracking:
