@@ -1,0 +1,29 @@
+{% load i18n %}
+{% load static %}
+<div id="carousel-homepage" class="carousel slide carousel-fade carousel-dark" data-bs-ride="carousel">
+    <div class="carousel-indicators">
+        {% for item in carousels %}
+            <button type="button" data-bs-slide-to="{{ forloop.counter0 }}" data-bs-target="#carousel-homepage"
+                    {% if forloop.counter0 == 0 %}class="active" aria-current="true"{% endif %} aria-label="Slide {{ forloop.counter0 }}"></button>
+        {% endfor %}
+    </div>
+    <div class="carousel-inner">
+        {% for item in carousels %}
+            <div class="carousel-item{% if forloop.counter0 == 0 %} active{% endif %}">
+                <img class="d-block w-100" src="{% static item.img_src %}" alt="{% trans item.slide_label %}"/>
+                <div class="carousel-caption d-none d-md-block carousel-caption-style">
+                    <h5>{% trans item.slide_label %}</h5>
+                    <p>{% trans item.caption %}</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#carousel-homepage" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#carousel-homepage" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+    </button>
+</div>

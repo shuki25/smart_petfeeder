@@ -1,6 +1,6 @@
-from datetime import date, datetime
-from fractions import Fraction
 import logging
+from datetime import datetime
+from fractions import Fraction
 
 import pytz
 import qrcode
@@ -9,12 +9,11 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from django.db.models.signals import post_delete, post_save
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from rest_framework.authtoken.models import Token
-
 
 log = logging.getLogger(__name__)
 
@@ -250,7 +249,7 @@ class Carousel(models.Model):
     name = models.CharField(max_length=50)
     img_src = models.CharField(max_length=255)
     slide_label = models.CharField(max_length=128)
-    caption = models.CharField(max_length=128, blank=True, null=True)
+    caption = models.TextField(max_length=512, blank=True, null=True)
     is_active = models.BooleanField(default=False)
     is_visible = models.BooleanField(default=False)
     start_datetime = models.DateTimeField(null=True)
@@ -327,11 +326,11 @@ def add_event_queue2(sender, instance=None, created=False, **kwargs):
 @receiver(post_save, sender=DeviceOwner)
 def add_event_queue3(sender, instance=None, created=False, **kwargs):
     EventQueue.objects.get_or_create(device_owner_id=instance.id, event_code=400, status_code="P")
-    status, is_created = DeviceStatus.objects.get_or_create(device_id=instance.device_id)
-    if is_created:
+    if created:
         NotificationAlertTracking.objects.create(device_owner_id=instance.id)
+    status, is_created = DeviceStatus.objects.get_or_create(device_id=instance.device_id)
     status.has_event = True
-    status.save()
+    status.save(update_fields=["has_event"])
 
 
 @receiver(post_save, sender=FeedingLog)
@@ -345,7 +344,8 @@ def add_event_queue4(sender, instance=None, created=False, **kwargs):
         new_amount = amount - instance.feed_amt
         device_status.hopper_level = (new_amount / capacity) * 100
         device_status.save()
-        if user_settings.pushover_user_key != "":
+        if user_settings.pushover_user_key != "" and (user_settings.manual_food or user_settings.auto_food):
+            message = ""
             if instance.feed_type == "R" and user_settings.manual_food:
                 message = "%s cup was manually dispensed from a remote computer or mobile device." % (
                     Fraction(instance.feed_amt)
@@ -357,8 +357,9 @@ def add_event_queue4(sender, instance=None, created=False, **kwargs):
                     Fraction(instance.feed_amt),
                     instance.pet_name,
                 )
-            MessageQueue(
-                device_owner_id=instance.device_owner_id, user_id=device.user_id, title=device.name, message=message
-            ).save()
+            if message != "":
+                MessageQueue(
+                    device_owner_id=instance.device_owner_id, user_id=device.user_id, title=device.name, message=message
+                ).save()
     except ObjectDoesNotExist as e:
         log.warning("Object not found: %r", e)
