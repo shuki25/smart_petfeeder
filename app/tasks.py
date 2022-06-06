@@ -120,5 +120,5 @@ def check_offline_status():
                 alert_tracking.offline_alert = True
                 alert_tracking.save()
         except ObjectDoesNotExist as e:
-            log.error("record not found: %s" % e)
+            log.info("record not found: %s" % e)
     pass
