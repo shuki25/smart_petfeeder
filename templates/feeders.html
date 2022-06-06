@@ -213,8 +213,8 @@
             {% if upgrade_active %}
             $(window).on('load', function (e) {
                 setTimeout(function () {
-                    window.location.replace(location.protocol + '//' + location.host + location.pathname);
-                },75000);
+                    window.location.reload();
+                },30000);
             });
             {% endif %}
         })
