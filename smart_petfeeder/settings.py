@@ -96,7 +96,7 @@ WSGI_APPLICATION = "smart_petfeeder.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "smart-petfeeder",
+        "NAME": MYSQL_DATABASE,
         "USER": MYSQL_USER,
         "PASSWORD": MYSQL_PASSWORD,
         "HOST": MYSQL_HOST,
