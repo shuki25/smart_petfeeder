@@ -137,7 +137,7 @@ class FeedingLog(models.Model):
     pet_name = models.CharField(max_length=80, default="Manual")
     feed_type = models.CharField(max_length=1, choices=FeedType.choices, default=FeedType.MANUAL)
     feed_amt = models.FloatField(default=0.5)
-    feed_timestamp = models.DateTimeField(auto_now_add=True)
+    feed_timestamp = models.DateTimeField(null=False, default=now)
 
     class Meta:
         db_table = "app_feeding_log"
