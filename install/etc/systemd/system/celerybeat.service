@@ -4,8 +4,8 @@ After=network.target
 
 [Service]
 Type=simple
-User=celery
-Group=celery
+User=django
+Group=django
 EnvironmentFile=/etc/default/celery
 WorkingDirectory=/home/django/smart_petfeeder
 ExecStart=/bin/sh -c '${CELERY_BIN} -A ${CELERY_APP} beat  \
