@@ -43,21 +43,26 @@ ALLOWED_HOSTS = ["localhost", "{server IP address}"]
 
 5. Install necessary system configuration files:
 ```bash
-$ sudo cp install/celery.service /lib/systemd/system
-$ sudo cp install/celerybeat.service /lib/systemd/system
-$ sudo cp install/gunicorn.service /lib/systemd/system
-$ sudo systemctl daemon-reload
-$ sudo systemctl enable celery.service
-$ sudo systemctl enable celerybeat.service
-$ sudo systemctl enable gunicorn.service
-$ sudo systemctl start gunicorn.service
-$ sudo systemctl start celery.service
-$ sudo systemctl start celerybeat.service
+sudo cp default/celery /etc/default 
+sudo cp install/etc/systemd/system/celery.service /lib/systemd/system
+sudo cp install/etc/systemd/system/celerybeat.service /lib/systemd/system
+sudo cp install/etc/systemd/system/gunicorn.service /lib/systemd/system
+sudo mkdir -p /var/log/celery
+sudo chown django:django /var/log/celery
+sudo mkdir -p /var/run/celery
+sudo chown django:django /var/run/celery
+sudo systemctl daemon-reload
+sudo systemctl enable celery.service
+sudo systemctl enable celerybeat.service
+sudo systemctl enable gunicorn.service
+sudo systemctl start gunicorn.service
+sudo systemctl start celery.service
+sudo systemctl start celerybeat.service
 
-$ sudo cp install/nginx-petnet-rescued /etc/nginx/sites-available/petnet-rescued
-$ sudo ln -s /etc/nginx/sites-available/petnet-rescued /etc/nginx/sites-enabled
-$ sudo rm /etc/nginx/sites-enabled/default
-$ sudo systemctl restart nginx
+sudo cp install/nginx-petnet-rescued /etc/nginx/sites-available/petnet-rescued
+sudo ln -s /etc/nginx/sites-available/petnet-rescued /etc/nginx/sites-enabled
+sudo rm /etc/nginx/sites-enabled/default
+sudo systemctl restart nginx
 ```
 
 ## Notes
