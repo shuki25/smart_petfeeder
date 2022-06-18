@@ -117,10 +117,7 @@ class FeedingScheduleViewSet(viewsets.ModelViewSet):
             )
 
             return (
-                super()
-                .get_queryset()
-                .filter(device_owner_id=device_owner.id, active_flag=True)
-                .order_by("local_time")
+                super().get_queryset().filter(device_owner_id=device_owner.id, active_flag=True).order_by("local_time")
             )
 
         except ObjectDoesNotExist:
@@ -129,7 +126,7 @@ class FeedingScheduleViewSet(viewsets.ModelViewSet):
 
 class SettingsViewSet(viewsets.ModelViewSet):
     """
-    API endpoint that allows feeding schedule to be viewed or edited.
+    API endpoint that allows settings to be viewed or edited.
     """
 
     queryset = Settings.objects.all().order_by("name")
@@ -209,12 +206,25 @@ class DeviceOwnerViewSet(viewsets.ModelViewSet):
 
     queryset = DeviceOwner.objects.all().order_by("id")
     serializer_class = DeviceOwnerSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, DevicePermission]
     lookup_field = "device__control_board_identifier"
+    # pagination_class = None
+
+    # def get_queryset(self):
+    #     log.debug("We are inside Device Owner View Set")
+    #     return super().get_queryset().filter(user_id=self.request.user.id)
 
     def get_queryset(self):
-        log.debug("We are inside Device Owner View Set")
-        return super().get_queryset().filter(user_id=self.request.user.id)
+        try:
+            device_owner = DeviceOwner.objects.get(
+                user_id=self.request.user.id,
+                device_key=self.request.headers["X-Device-Key"],
+            )
+
+            return super().get_queryset().filter(id=device_owner.id)
+
+        except ObjectDoesNotExist:
+            return None
 
 
 @api_view(["GET"])
@@ -230,14 +240,10 @@ def verify_device(request, *args, **kwargs):
         # "secret_key": kwargs["secret_key"],
         "api_key": None,
     }
-    device_info = Device.objects.filter(
-        control_board_identifier=kwargs["device_id"], secret_key=kwargs["secret_key"]
-    )
+    device_info = Device.objects.filter(control_board_identifier=kwargs["device_id"], secret_key=kwargs["secret_key"])
     if len(device_info):
         try:
-            owner = DeviceOwner.objects.get(
-                device__control_board_identifier=kwargs["device_id"]
-            )
+            owner = DeviceOwner.objects.get(device__control_board_identifier=kwargs["device_id"])
             log.debug("user_id: %d" % owner.user_id)
             api_key = Token.objects.get(user_id=owner.user_id)
             data["status"] = 200
@@ -285,17 +291,13 @@ def heartbeat(request):
     """
 
     if request.method == "POST":
-        device_id = get_device_id(
-            device_key=request.headers["X-Device-Key"], user_id=request.user.id
-        )
+        device_id = get_device_id(device_key=request.headers["X-Device-Key"], user_id=request.user.id)
 
         body_unicode = request.body.decode("utf-8")
         if body_unicode:
             body = json.loads(body_unicode)
         else:
-            return Response(
-                {"error": "bad request"}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "bad request"}, status=status.HTTP_400_BAD_REQUEST)
 
         attr_list = [
             "battery_soc",
@@ -304,7 +306,7 @@ def heartbeat(request):
             "on_power",
             "control_board_revision",
             "firmware_version",
-            "is_hopper_low"
+            "is_hopper_low",
         ]
         device_status = DeviceStatus.objects.get(device_id=device_id)
         device_status.last_ping = timezone.now()
@@ -314,13 +316,9 @@ def heartbeat(request):
         device_status.save()
 
         try:
-            notification_settings = NotificationSettings.objects.get(
-                user_id=request.user.id
-            )
-            alert_tracking = (
-                NotificationAlertTracking.objects.select_for_update().filter(
-                    device_owner__device_id=device_id
-                )
+            notification_settings = NotificationSettings.objects.get(user_id=request.user.id)
+            alert_tracking = NotificationAlertTracking.objects.select_for_update().filter(
+                device_owner__device_id=device_id
             )
 
             if notification_settings.feeder_offline:
@@ -365,9 +363,7 @@ def heartbeat(request):
             if notification_settings.low_battery and not device_status.on_power:
                 with transaction.atomic():
                     for alert in alert_tracking:
-                        crate_time = battery_time(
-                            device_status.battery_soc, device_status.battery_crate
-                        )
+                        crate_time = battery_time(device_status.battery_soc, device_status.battery_crate)
 
                         log.info("crate time: %s" % crate_time)
                         # If time remaining is less than 30 minutes, send notification.
@@ -383,7 +379,8 @@ def heartbeat(request):
                                 device_owner_id=alert.device_owner_id,
                                 user_id=request.user.id,
                                 title=alert.device_owner.name,
-                                message="Your feeder's backup battery has %d minutes of running time remaining. Please connect the power to the feeder as soon as possible." % int(crate_time / 60),
+                                message="Your feeder's backup battery has %d minutes of running time remaining. Please connect the power to the feeder as soon as possible."
+                                % int(crate_time / 60),
                             ).save()
                             alert.save()
 
@@ -430,9 +427,7 @@ def heartbeat(request):
 
         if device_status.has_event:
             event = (
-                EventQueue.objects.filter(
-                    device_owner__device_id=device_id, status_code="P"
-                )
+                EventQueue.objects.filter(device_owner__device_id=device_id, status_code="P")
                 .order_by("created_at")
                 .values()
                 .first()
@@ -455,22 +450,16 @@ def event_task_completed(request):
     """
 
     if request.method == "POST":
-        device_id = get_device_id(
-            device_key=request.headers["X-Device-Key"], user_id=request.user.id
-        )
+        device_id = get_device_id(device_key=request.headers["X-Device-Key"], user_id=request.user.id)
 
         body_unicode = request.body.decode("utf-8")
         if body_unicode:
             body = json.loads(body_unicode)
         else:
-            return Response(
-                {"error": "bad request"}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "bad request"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            event = EventQueue.objects.get(
-                device_owner__device_id=device_id, id=body["id"]
-            )
+            event = EventQueue.objects.get(device_owner__device_id=device_id, id=body["id"])
             event.status_code = "C"
             event.save()
             update_ping(device_id)

@@ -58,8 +58,12 @@ class DeviceSerializer(serializers.ModelSerializer):
 class DeviceOwnerSerializer(serializers.ModelSerializer):
     class Meta:
         model = DeviceOwner
-        fields = "__all__"
-        depth = 0
+        fields = [
+            "id",
+            "manual_button",
+            "manual_motor_timing",
+        ]
+        depth = 1
 
 
 class FeedingLogSerializer(serializers.ModelSerializer):

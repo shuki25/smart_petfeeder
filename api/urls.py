@@ -10,7 +10,7 @@ router.register(r"pets", views.PetViewSet)
 router.register(r"feeding-schedule", views.FeedingScheduleViewSet)
 router.register(r"settings", views.SettingsViewSet)
 router.register(r"feeding-log", views.FeedingLogViewSet)
-router.register(r"devices/registered", views.DeviceOwnerViewSet)
+router.register(r"device/settings", views.DeviceOwnerViewSet)
 router.register(r"devices", views.DeviceViewSet)
 
 # Wire up our API using automatic URL routing.
