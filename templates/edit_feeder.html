@@ -148,6 +148,9 @@
     <script>
         let verify_complete = false;
         let verify_btn_update = false;
+        $(window).on('load', function (e) {
+            $('#hopper_level').trigger('input');
+        });
         $(() => {
             $('#hopper_level').on('input', function (e) {
                 let capacity = $('#feeder_model').find(':selected').data('hopper-capacity');
@@ -172,9 +175,7 @@
                 $('#device_image').attr("src", img_path);
                 $('#hopper_level').trigger('input');
             });
-            $(window).on('load', function (e) {
-                $('#hopper_level').trigger('input');
-            });
+
         });
         {% if current_route == "activate-feeder" %}
             $('#clear_button').click(function (e) {
