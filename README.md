@@ -43,19 +43,21 @@ ALLOWED_HOSTS = ["localhost", "{server IP address}"]
 
 5. Install necessary system configuration files:
 ```bash
-$ sudo cp install/monitor.service /lib/systemd/system
+$ sudo cp install/celery.service /lib/systemd/system
+$ sudo cp install/celerybeat.service /lib/systemd/system
 $ sudo cp install/gunicorn.service /lib/systemd/system
 $ sudo systemctl daemon-reload
-$ sudo systemctl enable monitor.service
+$ sudo systemctl enable celery.service
+$ sudo systemctl enable celerybeat.service
 $ sudo systemctl enable gunicorn.service
 $ sudo systemctl start gunicorn.service
+$ sudo systemctl start celery.service
+$ sudo systemctl start celerybeat.service
 
 $ sudo cp install/nginx-petnet-rescued /etc/nginx/sites-available/petnet-rescued
 $ sudo ln -s /etc/nginx/sites-available/petnet-rescued /etc/nginx/sites-enabled
 $ sudo rm /etc/nginx/sites-enabled/default
 $ sudo systemctl restart nginx
-
-$ sudo systemctl start monitor.service
 ```
 
 ## Notes
