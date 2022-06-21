@@ -29,11 +29,17 @@ $ sudo adduser django
 $ su - django
 $ git clone https://github.com/shuki25/smart_petfeeder.git
 $ cd smart_petfeeder/
+$ mkdir media/pet_photos
+$ chmod -R 0775 media/pet_photos
+$ chgrp -R www-data media/pet_photos
 $ python3 -m venv venv
 $ source venv/bin/activate
 $ pip install -r requirements.txt
 $ ./manage.py migrate
 $ ./manage.py createsuperuser
+$ ./manage.py loaddata fixtures/initial_data.json
+$ ./manage.py loaddata fixtures/posix_timezone.json
+$ ./manage.py collectstatic
 ```
 4. Add your IP address to `ALLOWED_HOSTS` in `smart_petfeeder/settings.py` as shown below and save the changes before starting up the server. Replace the {RPi IP address} with your IP address.
 ```
@@ -43,26 +49,27 @@ ALLOWED_HOSTS = ["localhost", "{server IP address}"]
 
 5. Install necessary system configuration files:
 ```bash
-sudo cp default/celery /etc/default 
-sudo cp install/etc/systemd/system/celery.service /lib/systemd/system
-sudo cp install/etc/systemd/system/celerybeat.service /lib/systemd/system
-sudo cp install/etc/systemd/system/gunicorn.service /lib/systemd/system
-sudo mkdir -p /var/log/celery
-sudo chown django:django /var/log/celery
-sudo mkdir -p /var/run/celery
-sudo chown django:django /var/run/celery
-sudo systemctl daemon-reload
-sudo systemctl enable celery.service
-sudo systemctl enable celerybeat.service
-sudo systemctl enable gunicorn.service
-sudo systemctl start gunicorn.service
-sudo systemctl start celery.service
-sudo systemctl start celerybeat.service
+cp default/celery /etc/default 
+cp install/etc/systemd/system/celery.service /lib/systemd/system
+cp install/etc/systemd/system/celerybeat.service /lib/systemd/system
+cp install/etc/systemd/system/gunicorn.service /lib/systemd/system
+cp install/etc/tmpfiles.d/celery.conf /etc/tmpfiles.d
+mkdir -p /var/log/celery
+chown django:django /var/log/celery
+mkdir -p /var/run/celery
+chown django:django /var/run/celery
+systemctl daemon-reload
+systemctl enable celery.service
+systemctl enable celerybeat.service
+systemctl enable gunicorn.service
+systemctl start gunicorn.service
+systemctl start celery.service
+systemctl start celerybeat.service
 
-sudo cp install/nginx-petnet-rescued /etc/nginx/sites-available/petnet-rescued
-sudo ln -s /etc/nginx/sites-available/petnet-rescued /etc/nginx/sites-enabled
-sudo rm /etc/nginx/sites-enabled/default
-sudo systemctl restart nginx
+cp install/etc/nginx/sites-available/nginx-petnet-rescued /etc/nginx/sites-available/petnet-rescued
+ln -s /etc/nginx/sites-available/petnet-rescued /etc/nginx/sites-enabled
+rm /etc/nginx/sites-enabled/default
+systemctl restart nginx
 ```
 
 ## Notes
