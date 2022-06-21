@@ -67,6 +67,9 @@
                                     {% endfor %}
                                 </select>
                             </div>
+                            {% if current_route != "add-feed-time" %}
+                            <input type="hidden" name="previous_device_owner_id" value="{{ schedule.device_owner_id }}">
+                            {% endif %}
                             <label for="device" class="form-text mb-3">Select the feeder that will dispense food at a scheduled feeding time.</label>
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text" id="inputGroup-sizing-md" style="width: 110px">Pet</span>

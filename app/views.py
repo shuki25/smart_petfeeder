@@ -228,8 +228,18 @@ def remove_schedule(request):
         if token == xss_token("remove-feed-time", schedule_id):
             try:
                 schedule = FeedingSchedule.objects.get(id=schedule_id, device__deviceowner__user_id=request.user.id)
-                schedule.delete()
                 messages.success(request, "Feeding time was successfully removed.")
+                try:
+                    eq = EventQueue.objects.filter(
+                        device_owner_id=schedule.device_owner_id, event_code=300, status_code="P"
+                    )
+                    if not len(eq):
+                        event_queue = EventQueue(device_owner_id=schedule.device_owner_id, event_code=300, status_code="P")
+                        event_queue.save()
+                        update_has_event_tasks(schedule.device_id)
+                except Exception as e:
+                    messages.error(request, "Internal Error. Error creating event queue: %s" % e)
+                schedule.delete()
             except ObjectDoesNotExist:
                 messages.error(request, "Feeding time was not found.")
     return HttpResponseRedirect("/schedule/")
@@ -242,6 +252,7 @@ def add_edit_schedule(request, schedule_id=None):
     timezone = user_settings["timezone"] if "timezone" in user_settings else "UTC"
     schedule = None
     error = False
+    previous_device_owner = None
 
     if schedule_id is None:
         schedule = FeedingSchedule()
@@ -261,6 +272,11 @@ def add_edit_schedule(request, schedule_id=None):
         dow_list = request.POST.getlist("dow")
         dow_list = [int(n) if n else 0 for n in dow_list]
         schedule.dow = sum(dow_list)
+        try:
+            if request.POST["previous_device_owner_id"] != "":
+                previous_device_owner = DeviceOwner.objects.get(id=request.POST["previous_device_owner_id"])
+        except KeyError:
+            previous_device_owner = None
         try:
             if request.POST["device_owner_id"]:
                 schedule.device_owner_id = request.POST["device_owner_id"]
@@ -307,21 +323,24 @@ def add_edit_schedule(request, schedule_id=None):
             error = True
 
         if not error:
-            # try:
+            if previous_device_owner is not None:
+                try:
+                    eq = EventQueue.objects.filter(
+                        device_owner_id=previous_device_owner.id, event_code=300, status_code="P"
+                    )
+                    if not len(eq):
+                        event_queue = EventQueue(device_owner_id=previous_device_owner.id, event_code=300, status_code="P")
+                        event_queue.save()
+                        update_has_event_tasks(previous_device_owner.device_id)
+                except Exception as e:
+                    messages.error(request, "Internal Error. Error creating event queue: %s" % e)
             schedule.save()
-            # eq = EventQueue.objects.filter(
-            #     device_owner_id=schedule.device_owner_id, event_code=300, status_code="P"
-            # )
-            # if not len(eq):
-            #     event_queue = EventQueue(device_owner_id=schedule.device_owner_id, event_code=300, status_code="P")
-            #     event_queue.save()
+
             if schedule_id is None:
                 messages.success(request, "Feeding time added.")
             else:
                 messages.success(request, "Feeding time saved.")
             return HttpResponseRedirect("/schedule/")
-            # except Exception as e:
-            #     messages.error(request, "Internal Error: %s" % e)
 
     device_owner = DeviceOwner.objects.filter(user_id=request.user.id)
     motor_timings = MotorTiming.objects.all().order_by("feed_amount")
