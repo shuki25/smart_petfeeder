@@ -20,14 +20,16 @@ class PetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pet
         fields = [
-            "url",
+            "id",
             "name",
             "animal_type",
             "animal_size",
             "weight",
             "daily_calories_intake",
+            "photo",
         ]
-        depth = 1
+        # fields = "__all__"
+        depth = 0
 
 
 class FeedingScheduleSerializer(serializers.ModelSerializer):
@@ -52,18 +54,14 @@ class DeviceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Device
         fields = "__all__"
-        depth = 0
+        depth = 1
 
 
 class DeviceOwnerSerializer(serializers.ModelSerializer):
     class Meta:
         model = DeviceOwner
-        fields = [
-            "id",
-            "manual_button",
-            "manual_motor_timing",
-        ]
-        depth = 1
+        fields = "__all__"
+        depth = 0
 
 
 class FeedingLogSerializer(serializers.ModelSerializer):
