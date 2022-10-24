@@ -47,6 +47,7 @@ from .utils import (
     battery_time,
     generate_device_key,
     get_next_feeding,
+    is_device_registered,
     resize_and_crop,
     seconds_to_days,
     update_has_event_tasks,
@@ -234,7 +235,9 @@ def remove_schedule(request):
                         device_owner_id=schedule.device_owner_id, event_code=300, status_code="P"
                     )
                     if not len(eq):
-                        event_queue = EventQueue(device_owner_id=schedule.device_owner_id, event_code=300, status_code="P")
+                        event_queue = EventQueue(
+                            device_owner_id=schedule.device_owner_id, event_code=300, status_code="P"
+                        )
                         event_queue.save()
                         update_has_event_tasks(schedule.device_id)
                 except Exception as e:
@@ -329,7 +332,9 @@ def add_edit_schedule(request, schedule_id=None):
                         device_owner_id=previous_device_owner.id, event_code=300, status_code="P"
                     )
                     if not len(eq):
-                        event_queue = EventQueue(device_owner_id=previous_device_owner.id, event_code=300, status_code="P")
+                        event_queue = EventQueue(
+                            device_owner_id=previous_device_owner.id, event_code=300, status_code="P"
+                        )
                         event_queue.save()
                         update_has_event_tasks(previous_device_owner.device_id)
                 except Exception as e:
@@ -878,20 +883,6 @@ def pushover_verify(request, user_key):
     r = c.validate_user(user_key)
 
     return HttpResponse(r.text, content_type="application/json")
-
-
-def is_device_registered(device_id, user_id):
-    device = Device.objects.filter(control_board_identifier=device_id)
-    device_owner = DeviceOwner.objects.filter(device__control_board_identifier=device_id)
-    already_owned = False
-    if len(device_owner):
-        already_owned = device_owner[0].user_id == user_id
-    data = {
-        "status": len(device_owner) == 0 and len(device) > 0,
-        "already_registered": len(device_owner) > 0,
-        "already_owned": already_owned,
-    }
-    return data
 
 
 @login_required
