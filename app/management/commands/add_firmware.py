@@ -10,7 +10,7 @@ from app.models import ControlBoardModel, FirmwareUpdate
 
 class Command(BaseCommand):
     help = "Install new firmware to firmware repository"
-    builds = ["esp32-revC-1g", "esp32-revC-2g", "esp32-s2-revD-1g"]
+    builds = ["esp32-revC-1g", "esp32-revC-2g", "esp32-s2-revD-1g", "esp32-revE-2g"]
 
     def add_arguments(self, parser):
         parser.add_argument("-f", "--force", action='store_true', help="Force install")
