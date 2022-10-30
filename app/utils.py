@@ -15,7 +15,7 @@ from PIL import Image
 
 from smart_petfeeder.settings import DEBUG
 
-from .models import DeviceOwner, DeviceStatus, EventQueue, FeedingSchedule, Settings
+from .models import Device, DeviceOwner, DeviceStatus, EventQueue, FeedingSchedule, Settings
 
 
 def uptime(boot_time):
@@ -60,6 +60,7 @@ def get_next_feeding(device_id, the_timezone="UTC"):
 
     if rs:
         data = {
+            "device_id": device_id,
             "has_meal": 1,
             "meal_id": rs.id,
             "meal_name": rs.meal_name,
@@ -74,6 +75,7 @@ def get_next_feeding(device_id, the_timezone="UTC"):
         }
     else:
         data = {
+            "device_id": device_id,
             "has_meal": 0,
             "meal_id": 0,
             "meal_name": "No scheduled meal",
@@ -90,7 +92,7 @@ def get_next_feeding(device_id, the_timezone="UTC"):
     if DEBUG:
         data["debug"] = {
             "current_time": current_time,
-            "timezone": timezone,
+            "timezone": the_timezone,
         }
 
     return data
@@ -112,12 +114,17 @@ def seconds_to_days(time):
     return "%d days, %02d:%02d:%02d" % (day, hour, minutes, seconds)
 
 
-def get_settings():
+def get_settings(user_id=None):
     data = {}
 
-    qs = Settings.objects.all()
-    for row in qs:
-        data[row.name] = row.value
+    if user_id:
+        qs = Settings.objects.filter(user_id=user_id)
+        for row in qs:
+            data[row.name] = row.value
+    else:
+        qs = Settings.objects.all()
+        for row in qs:
+            data[row.name] = row.value
 
     return data
 
@@ -240,3 +247,18 @@ def battery_time(battery_soc, battery_crate):
         crate_time = 0
 
     return crate_time
+
+
+def is_device_registered(device_id, user_id):
+    device = Device.objects.filter(control_board_identifier=device_id)
+    device_owner = DeviceOwner.objects.filter(device__control_board_identifier=device_id)
+    already_owned = False
+    if len(device_owner):
+        already_owned = device_owner[0].user_id == user_id
+    data = {
+        "status": len(device_owner) == 0 and len(device) > 0,
+        "can_register": len(device_owner) == 0 and len(device) > 0,
+        "already_registered": len(device_owner) > 0,
+        "already_owned": already_owned,
+    }
+    return data
