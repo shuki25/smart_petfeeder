@@ -25,10 +25,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# Set IS_STAGING to True if you want to use the staging/development website
+IS_STAGING = False
+
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "smartpetfeeder.net", "*"]
-CSRF_TRUSTED_ORIGINS = ["https://smartpetfeeder.net"]
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
+if IS_STAGING:
+    CSRF_TRUSTED_ORIGINS = ["https://staging.smartpetfeeder.net"]
+    CSRF_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = False
+else:
+    CSRF_TRUSTED_ORIGINS = ["https://smartpetfeeder.net"]
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
 
 # SECURE_SSL_REDIRECT must be set to False if the site is behind nginx-reverse-proxy and is using Cloudflare
 SECURE_SSL_REDIRECT = False
@@ -195,6 +203,14 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 30,
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "5/minute",
+        "user": "1/second",
+    },
 }
 
 MEDIA_URL = "/media/"
